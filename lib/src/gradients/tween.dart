@@ -240,4 +240,31 @@ class IntermediateGradient extends Gradient {
       distance: packet.distance,
     );
   }
+
+  @override
+  Gradient withOpacity(double opacity)  {
+    final newColors = <Color>[];
+    for (final color in colors) {
+      newColors.add(color.withOpacity(opacity));
+    }
+    return _copyWith(
+      resolved,
+      colors: newColors,
+      stops: stops,
+      transform: transform,
+      tileMode: tileMode,
+      begin: begin,
+      end: end,
+      center: center,
+      radius: radius,
+      focal: focal,
+      focalRadius: focalRadius,
+      startAngle: startAngle,
+      endAngle: endAngle,
+      softness: softness,
+      shadeFunction: shadeFunction,
+      shadeFactor: shadeFactor,
+      distance: distance,
+    );
+  }
 }

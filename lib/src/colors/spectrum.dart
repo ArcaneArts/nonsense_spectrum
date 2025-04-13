@@ -261,7 +261,6 @@ extension MaterialAccentToList on MaterialAccentColor {
   /// Returns the `shade50 .. shade700` formed `List<Color>` from the
   /// [MaterialAccentColor] provided as `this`.
   List<Color> get asList => [
-        shade50,
         shade100,
         shade200,
         shade400,
@@ -276,7 +275,6 @@ extension MaterialAccentToList on MaterialAccentColor {
   /// Default is `true` to differentiate versatility from [asList].
   List<Color> toList({bool includePrimary = true}) => [
         if (includePrimary) this,
-        shade50,
         shade100,
         shade200,
         shade400,

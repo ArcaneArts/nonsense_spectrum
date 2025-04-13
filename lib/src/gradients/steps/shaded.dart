@@ -258,9 +258,7 @@ class LinearShadedSteps extends LinearSteps {
         other.end == end;
   }
 
-  @override
-  int get hashCode => hashValues(shadeFunction, shadeFactor, distance, softness,
-      hashList(colors), hashList(stops), tileMode, begin, end);
+
 
   @override
   String toString() => '${objectRuntimeType(this, 'LinearShadedSteps')} '
@@ -513,19 +511,6 @@ class RadialShadedSteps extends RadialSteps {
               other.focal == focal &&
               other.focalRadius == focalRadius;
 
-  @override
-  int get hashCode => hashValues(
-      shadeFunction,
-      shadeFactor,
-      distance,
-      softness,
-      hashList(colors),
-      hashList(stops),
-      tileMode,
-      center,
-      radius,
-      focal,
-      focalRadius);
 
   @override
   String toString() => '${objectRuntimeType(this, 'RadialShadedSteps')}'
@@ -774,18 +759,6 @@ class SweepShadedSteps extends SweepSteps {
               other.endAngle == endAngle &&
               other.tileMode == tileMode;
 
-  @override
-  int get hashCode => hashValues(
-      shadeFunction,
-      shadeFactor,
-      distance,
-      softness,
-      hashList(colors),
-      hashList(stops),
-      tileMode,
-      center,
-      startAngle,
-      endAngle);
 
   @override
   String toString() => '${objectRuntimeType(this, 'SweepShadedSteps')}'

@@ -284,15 +284,20 @@ class LinearSteps extends Steps {
         other.end == end;
   }
 
-  @override
-  int get hashCode => hashValues(
-      softness, hashList(colors), hashList(stops), tileMode, begin, end);
+
 
   @override
   String toString() =>
       '${objectRuntimeType(this, 'LinearSteps')} (softness: $softness, '
       '(softness: $softness, colors: $colors, stops: $stops, '
       '$tileMode, begin: $begin, end: $end)';
+
+  @override
+  Gradient withOpacity(double opacity)  => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
   // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
 }
 
@@ -482,15 +487,19 @@ class RadialSteps extends Steps {
               other.focal == focal &&
               other.focalRadius == focalRadius;
 
-  @override
-  int get hashCode => hashValues(softness, hashList(colors), hashList(stops),
-      tileMode, center, radius, focal, focalRadius);
 
   @override
   String toString() => '${objectRuntimeType(this, 'RadialSteps')}'
       '(softness: $softness, colors: $colors, stops: $stops, '
       '$tileMode, center: $center, radius: $radius, '
       'focal: $focal, focalRadius: $focalRadius)';
+
+  @override
+  Gradient withOpacity(double opacity) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
   // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
 }
 
@@ -669,14 +678,19 @@ class SweepSteps extends Steps {
               other.endAngle == endAngle &&
               other.tileMode == tileMode;
 
-  @override
-  int get hashCode => hashValues(softness, hashList(colors), hashList(stops),
-      tileMode, center, startAngle, endAngle);
+
 
   @override
   String toString() => '${objectRuntimeType(this, 'SweepSteps')}'
       '(softness: $softness, colors: $colors, stops: $stops, '
       '$tileMode, center: $center, '
       'startAngle: $startAngle, endAngle: $endAngle)';
+
+  @override
+  Gradient withOpacity(double opacity) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
   // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
 }

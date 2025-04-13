@@ -1,21 +1,20 @@
-name: spectrum
+name: nonsense_spectrum
 description: >
   A rainbow of Color and Gradient utilities. Interpolate gradients with a
   realized GradientTween. New type Steps & shaded varieties. Color generation &
   operators.
 
-version: 0.2.1+1
+version: 1.0.0
 repository: https://github.com/Zabadam/spectrum
 issue_tracker: https://github.com/Zabadam/spectrum/issues
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: ^3.3.2
 
 dependencies:
   flutter:
     sdk: flutter
 
-dev_dependencies: null
-
-flutter: null
+dev_dependencies:
+  lints: ^5.1.1
+flutter:
