@@ -5,6 +5,8 @@
 /// single dynamic value, `0..1` or `2..255`.
 library colors;
 
+import 'package:flutter/widgets.dart';
+
 import 'common.dart';
 
 /// `ColorOperators` extends `Color` with operators support.

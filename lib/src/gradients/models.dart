@@ -9,8 +9,12 @@
 /// - [Shades], [Maths]
 library gradients;
 
-import 'common.dart';
+import 'package:flutter/widgets.dart';
+
+import '../colors/common.dart' show ComponentRestriction;
+import '../colors/shading.dart';
 import 'steps/steps.dart';
+
 
 /// Potential gradient properties for tweenage, notably excluding
 /// `colors`, `stops`, `transform`, & `tileMode`,

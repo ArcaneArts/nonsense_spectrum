@@ -6,8 +6,11 @@
 //\ [TweenSpec]; all options for a `GradientStoryboard`.
 library gradients;
 
+import 'package:flutter/widgets.dart';
+
 import 'common.dart';
 import 'models.dart';
+import 'utils.dart';
 
 /// Defines the options for a variety of transformations to apply to a
 /// `Gradient` in the process of making it an [AnimatedGradient].

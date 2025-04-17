@@ -9,9 +9,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
+import 'package:flutter/widgets.dart';
 
+import '../../../gradients.dart';
 import '../common.dart';
 import 'operators.dart';
+
+
 
 /// These `Steps` work a little bit differently than standard `Gradient`s.
 ///

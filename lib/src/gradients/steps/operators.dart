@@ -5,8 +5,11 @@
 /// quadruplication.
 library gradients;
 
-import '../common.dart';
+import 'package:flutter/widgets.dart';
+
 import '../models.dart';
+
+
 
 /// Defines the [function] and [factor] for step shading.
 class Shade {

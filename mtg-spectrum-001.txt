@@ -1,0 +1,4004 @@
+// File: lib/colors.dart
+library colors;
+export 'src/colors/operators.dart';
+export 'src/colors/shading.dart';
+export 'src/colors/spectrum.dart';
+// File: lib/gradients.dart
+library gradients;
+export 'src/gradients/animation.dart';
+export 'src/gradients/interpolation.dart'; // testing
+export 'src/gradients/models.dart';
+export 'src/gradients/nill.dart';
+export 'src/gradients/steps/shaded.dart';
+export 'src/gradients/steps/steps.dart';
+export 'src/gradients/tween.dart';
+export 'src/gradients/utils.dart';
+// File: lib/nonsense_spectrum.dart
+library spectrum;
+export 'colors.dart';
+export 'gradients.dart';
+// File: lib/src/colors/material.dart
+library colors;
+import 'package:flutter/material.dart' show Colors, MaterialAccentColor, MaterialColor;
+import 'package:flutter/widgets.dart';
+import 'package:nonsense_spectrum/colors.dart';
+import 'common.dart';
+const kShadeCountMaterialAccent = 5;
+const kShadeCountMaterialColor = 10;
+const kShadeKeysMaterialAccent = [50, 100, 200, 400, 700];
+const kShadeKeysMaterialColor = [
+  50,
+  100,
+  200,
+  300,
+  400,
+  500,
+  600,
+  700,
+  800,
+  900,
+];
+MaterialColor materialPrimaryFrom(
+        Color color, SwatchMode mode, double? factor) =>
+    materialColorFrom(color, mode, factor, true);
+MaterialAccentColor materialAccentFrom(
+        Color color, SwatchMode mode, double? factor) =>
+    materialColorFrom(color, mode, factor, false);
+dynamic materialColorFrom(
+  Color color,
+  SwatchMode mode,
+  double? factor,
+  bool isPrimary,
+) {
+  switch (mode) {
+    case SwatchMode.shade:
+      return isPrimary
+          ? MaterialColor(
+              color.value,
+              mapSwatchByShade(
+                color,
+                min: factor != null ? -(factor ~/ 2) : -100,
+                max: factor != null ? factor ~/ 2 : 100,
+                isPrimary: isPrimary,
+              ),
+            )
+          : MaterialAccentColor(
+              color.value,
+              mapSwatchByShade(
+                color,
+                min: factor != null ? -(factor ~/ 2) : -100,
+                max: factor != null ? factor ~/ 2 : 100,
+                isPrimary: isPrimary,
+              ),
+            );
+    case SwatchMode.desaturate:
+      return isPrimary
+          ? MaterialColor(
+              color.value,
+              mapSwatchByAlphaBlend(
+                color,
+                strength: factor,
+                isPrimary: isPrimary,
+              ),
+            )
+          : MaterialAccentColor(
+              color.value,
+              mapSwatchByAlphaBlend(
+                color,
+                strength: factor,
+                isPrimary: isPrimary,
+              ),
+            );
+    case SwatchMode.fade:
+      return isPrimary
+          ? MaterialColor(
+              color.value,
+              mapSwatchByOpacity(
+                color,
+                add: factor?.truncate() ?? 0,
+                isPrimary: isPrimary,
+              ),
+            )
+          : MaterialAccentColor(
+              color.value,
+              mapSwatchByOpacity(
+                color,
+                add: factor?.truncate() ?? 0,
+                isPrimary: isPrimary,
+              ),
+            );
+    case SwatchMode.complements:
+      return isPrimary
+          ? MaterialColor(
+              color.value,
+              mapSwatchByComplements(
+                color,
+                isPrimary: isPrimary,
+              ),
+            )
+          : MaterialAccentColor(
+              color.value,
+              mapSwatchByComplements(
+                color,
+                isPrimary: isPrimary,
+              ),
+            );
+  }
+}
+Map<int, Color> mapSwatchByShade(
+  Color primary, {
+  int min = -100,
+  int max = 100,
+  bool isPrimary = true,
+}) {
+  final count =
+      isPrimary ? kShadeCountMaterialColor : kShadeCountMaterialAccent;
+  final range = max - min;
+  final delta = range / count;
+  final shades =
+      List<int>.generate(count, (int i) => (max - i * delta).truncate());
+  var i = 0;
+  return <int, Color>{
+    for (var shade
+        in isPrimary ? kShadeKeysMaterialColor : kShadeKeysMaterialAccent)
+      shade: primary.withWhite(shades[i++])
+  };
+}
+Map<int, Color> mapSwatchByAlphaBlend(
+  Color primary, {
+  dynamic strength,
+  bool isPrimary = true,
+}) {
+  final alpha = alphaFromStrength(strength) ?? primary.alpha;
+  return isPrimary
+      ? {
+          50: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.15).round()), Colors.white)
+              .withAlpha(alpha),
+          100: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.25).round()), Colors.white)
+              .withAlpha(alpha),
+          200: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.4).round()), Colors.white)
+              .withAlpha(alpha),
+          300: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.6).round()), Colors.white)
+              .withAlpha(alpha),
+          400: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.8).round()), Colors.white)
+              .withAlpha(alpha),
+          500: primary.withAlpha(alpha),
+          600: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.7).round()), Colors.black)
+              .withAlpha(alpha),
+          700: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.5).round()), Colors.black)
+              .withAlpha(alpha),
+          800: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.3).round()), Colors.black)
+              .withAlpha(alpha),
+          900: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.15).round()), Colors.black)
+              .withAlpha(alpha),
+        }
+      : {
+          50: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.4).round()), Colors.white)
+              .withAlpha(alpha),
+          100: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.75).round()), Colors.white)
+              .withAlpha(alpha),
+          200: primary.withAlpha(alpha),
+          400: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.6).round()), Colors.black)
+              .withAlpha(alpha),
+          700: Color.alphaBlend(
+                  primary.withAlpha((alpha * 0.2).round()), Colors.black)
+              .withAlpha(alpha),
+        };
+}
+Map<int, Color> mapSwatchByOpacity(
+  Color primary, {
+  int add = 0,
+  bool isPrimary = true,
+}) {
+  final delta = 1.0 /
+      (isPrimary ? kShadeCountMaterialColor : (kShadeCountMaterialAccent - 1));
+  final keys = isPrimary ? kShadeKeysMaterialColor : kShadeKeysMaterialAccent;
+  return <int, Color>{
+    for (var k in keys)
+      k: primary.withWhite(add).withOpacity(primary.opacity *
+          delta *
+          (keys.indexOf(k) == 0 ? 0.5 : keys.indexOf(k)))
+  };
+}
+Map<int, Color> mapSwatchByComplements(Color primary, {bool isPrimary = true}) {
+  // final complements = primary.complementDeca;
+  final complements = primary.complementary(
+      isPrimary ? kShadeCountMaterialColor : kShadeCountMaterialAccent);
+  return isPrimary
+      ? {
+          50: complements[5],
+          100: complements[6],
+          200: complements[7],
+          300: complements[8],
+          400: complements[9],
+          500: complements[0],
+          600: complements[1],
+          700: complements[2],
+          800: complements[3],
+          900: complements[4],
+        }
+      : {
+          50: complements[3],
+          100: complements[4],
+          200: complements[0],
+          400: complements[1],
+          700: complements[2],
+        };
+}
+// File: lib/src/colors/shading.dart
+library colors;
+import 'package:flutter/widgets.dart';
+import 'common.dart';
+extension Shading on Color {
+  /// The value `add` is added to each RGB channel of `this`
+  /// and clamped to be `255` or less.
+  ///
+  /// Alpha channel of the returned color is maintained from `this` unless
+  /// a convenience pass is made for `dynamic` [strength], which may be a
+  /// double ranging `0..1` to represent opacity or an int ranging `2..255`
+  /// to represent alpha.
+  ///
+  /// This method is equal but opposite to [withBlack]. A negative value
+  /// provided here is equivalent to the positive version of that value given
+  /// to [withBlack].
+  Color withWhite(int add, [dynamic strength]) => Color.fromARGB(
+        alphaFromStrength(strength) ?? alpha,
+        (red + add).restricted,
+        (green + add).restricted,
+        (blue + add).restricted,
+      );
+  /// The value `subtract` is subtracted from each RGB channel of `this`
+  /// and clamped to be non-negative.
+  ///
+  /// Alpha channel of the returned color is maintained from `this` unless
+  /// a convenience pass is made for `dynamic` [strength], which may be a
+  /// double ranging `0..1` to represent opacity or an int ranging `2..255`
+  /// to represent alpha.
+  ///
+  /// This method is equal but opposite to [withWhite]. A negative value
+  /// provided here is equivalent to the positive version of that value given
+  /// to [withWhite].
+  Color withBlack(int subtract, [dynamic strength]) => Color.fromARGB(
+        alphaFromStrength(strength) ?? alpha,
+        (red - subtract).restricted,
+        (green - subtract).restricted,
+        (blue - subtract).restricted,
+      );
+}
+// File: lib/src/colors/operators.dart
+library colors;
+import 'package:flutter/widgets.dart';
+import 'common.dart';
+extension ColorOperators on Color {
+  /// ### [Color] Inversion Operator
+  /// Invert the [red], [green], and [blue] channels of a `Color`, maintaining
+  /// [alpha], by subtracting each of its components from the
+  /// maximum value for a component, `255` or `0xFF`; such as:
+  ///
+  /// ```dart
+  /// R=50 => 255-50=205, G=100 => 255-100=155, B=200 => 255-200=55
+  /// RGB(50,100,200) => RGB(205,155,55)
+  /// ```
+  Color operator -() =>
+      Color.fromARGB(alpha, 0xFF - red, 0xFF - green, 0xFF - blue);
+  /// ### [Color] Greater Than Operator
+  /// Returns `true` if `this Color` is "lighter" than `other` according to
+  /// method [computeLuminance].
+  ///
+  // ignore: lines_longer_than_80_chars
+  ///     bool operator >(Color other) => computeLuminance() > other.computeLuminance();
+  ///
+  /// ### [computeLuminance]:
+  /// "Returns a brightness value between 0 for darkest and 1 for lightest.
+  /// Represents the relative luminance of the color. \
+  /// **This value is computationally expensive to calculate.**
+  /// *See https://en.wikipedia.org/wiki/Relative_luminance.*"
+  ///
+  /// ### Nitty Gritty
+  /// To compute luminance of a color, each component (first divided by `255`
+  /// or `0xFF`) is linearized as such:
+  ///
+  ///     if (component <= 0.03928)
+  ///       return component / 12.92;
+  ///     return math.pow((component + 0.055) / 1.055, 2.4) as double;
+  ///
+  /// Then each component contributes itself as a different percentage of the
+  /// output luminance as such:
+  ///
+  ///     return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  bool operator >(Color other) => computeLuminance() > other.computeLuminance();
+  /// ### [Color] Less Than Operator
+  /// Returns `true` if `this Color` is "darker" than `other` according to
+  /// method [computeLuminance].
+  ///
+  // ignore: lines_longer_than_80_chars
+  ///     bool operator <(Color other) => computeLuminance() < other.computeLuminance();
+  ///
+  /// ### [computeLuminance]:
+  /// "Returns a brightness value between 0 for darkest and 1 for lightest.
+  /// Represents the relative luminance of the color. \
+  /// **This value is computationally expensive to calculate.**
+  /// *See https://en.wikipedia.org/wiki/Relative_luminance.*"
+  ///
+  /// ### Nitty Gritty
+  /// To compute luminance of a color, each component (first divided by `255`
+  /// or `0xFF`) is linearized as such:
+  ///
+  ///     if (component <= 0.03928)
+  ///       return component / 12.92;
+  ///     return math.pow((component + 0.055) / 1.055, 2.4) as double;
+  ///
+  /// Then each component contributes itself as a different percentage of the
+  /// output luminance as such:
+  ///
+  ///     return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  bool operator <(Color other) => computeLuminance() < other.computeLuminance();
+  /// ### [Color] Addition Operator
+  /// Add the [red], [green], and [blue] channels
+  /// of `other` with those of `this Color`.
+  ///
+  /// The resultant [alpha] is maintained from `this`.
+  ///
+  // /// To *also add* the `alpha` from each `Color`, see [&].
+  Color operator +(Color other) => Color.fromARGB(
+        alpha,
+        (red + other.red).restricted,
+        (green + other.green).restricted,
+        (blue + other.blue).restricted,
+      );
+  /// ### [Color] Subtraction Operator
+  /// Subtract the [red], [green], and [blue] channels
+  /// of `other` from those of `this Color`.
+  ///
+  /// The resultant [alpha] is maintained from `this`.
+  ///
+  // /// To *also subtract* the `alpha` from each `Color`, see [^].
+  Color operator -(Color other) => Color.fromARGB(
+        alpha,
+        (red - other.red).restricted,
+        (green - other.green).restricted,
+        (blue - other.blue).restricted,
+      );
+  /// ### [Color] Average Operator
+  /// Average the [alpha], [red], [green], and [blue] channels
+  /// of a `Color` with another `other`.
+  Color operator ~/(Color other) => Color.fromARGB(
+        ((alpha + other.alpha) ~/ 2).restricted,
+        ((red + other.red) ~/ 2).restricted,
+        ((green + other.green) ~/ 2).restricted,
+        ((blue + other.blue) ~/ 2).restricted,
+      );
+  /// ### [Color] Or Operator
+  /// Random `Color` access.
+  ///
+  /// If `others is Color`, the return value is `this` *or* `others`.
+  ///
+  /// If `others is List<Color>`, the return value is `this` *or* one of the
+  /// entries from `others`.
+  Color operator |(dynamic others) => (others is Color)
+      // Expanding first enables the mingling of Color-subtype objects,
+      // like MaterialColors and MaterialAccentColors.
+      ? (List.from([
+          [others] + [this]
+        ].expand((list) => list).toList())
+            ..shuffle())
+          .first
+      : (others is List<Color>)
+          ? (List.from([
+              others,
+              [this]
+            ].expand((list) => list).toList())
+                ..shuffle())
+              .first
+          : this;
+}
+extension ColorOperatorsMethods on Color {
+  /// Invert [red], [green] and [blue] channels of `this`, maintaining [alpha].
+  Color get inverted => -this;
+  /// Exposure `method` for `>` operator.
+  ///
+  /// Parameter [returnBrighter] is `true` by default, and so `this` color will
+  /// be returned if it is brighter than [other]. If `this` color is brighter
+  /// than [other] and [returnBrighter] is `false`, then [other] is returned
+  /// instead.
+  ///
+  /// The matter of being "brighter" is determined by the `>` operator, which
+  /// compares the colors using [computeLuminance]. \
+  /// "This value is computationally expensive to calculate."
+  Color compareLuminance(Color other, {bool returnBrighter = true}) =>
+      this > other
+          ? returnBrighter
+              ? this
+              : other
+          : returnBrighter
+              ? other
+              : this;
+  /// Exposure `method` for `|` operator: random `Color` access.
+  ///
+  /// If `others is Color`, the return value is `this` or `others`.
+  ///
+  /// If `others is List<Color>`, the return value is `this` or one of the
+  /// entries from `others`.
+  Color or(dynamic others) => this | others;
+  /// Add the `red`, `green`, and `blue` channels of `other` with
+  /// those of `this Color`. The resultant [alpha] is maintained from `this`,
+  /// unless a `strength` would be specified which is used instead.
+  ///
+  /// See [alphaFromStrength] for details on using a value between `0..1` or
+  /// `2..255` as a shortcut for specifying alpha/opacity override.
+  ///
+  /// Exposure `method` for `+` operator, providing [strength].
+  Color add(Color other, [dynamic strength]) =>
+      withAlpha(alphaFromStrength(strength) ?? alpha) + other;
+  // /// Consider [add] except the resultant [alpha]
+  // /// is the sum of both `Color`s' `alpha`.
+  // ///
+  // /// Exposure `method` for [&] `operator`.
+  // Color and(Color other) => this & other;
+  /// Subtract the `red`, `green`, and `blue` channels of `other` from
+  /// those of `this Color`. The resultant [alpha] is maintained from `this`,
+  /// unless a `strength` would be specified which is used instead.
+  ///
+  /// See [alphaFromStrength] for details on using a value between `0..1` or
+  /// `2..255` as a shortcut for specifying alpha/opacity override.
+  ///
+  /// Exposure `method` for `-` operator, providing [strength].
+  Color subtract(Color other, [dynamic strength]) =>
+      withAlpha(alphaFromStrength(strength) ?? alpha) - other;
+  /// Average the `alpha`, `red`, `green`, and `blue` channels
+  /// of a `Color` with another `other`.
+  ///
+  /// The resultant [alpha] may be overridden by providing a `strength`.
+  ///
+  /// See [alphaFromStrength] for details on using a value between `0..1` or
+  /// `2..255` as a shortcut for specifying alpha/opacity override.
+  ///
+  /// Exposure `method` for `~/` operator, providing [strength].
+  Color average(Color other, [dynamic strength]) =>
+      withAlpha(alphaFromStrength(strength) ?? alpha) ~/ other;
+}
+// File: lib/src/colors/common.dart
+library colors;
+import 'package:flutter/widgets.dart';
+extension ComponentRestriction on num {
+  ///     int get restricted => clamp(0,255).truncate();
+  ///
+  /// A quick getter for `num`s that returns an `int` that has been
+  /// clamped between `0..255` by integer division with `1` or `0xFF`.
+  ///
+  /// This value is in the valid range for a component of a [Color].
+  int get restricted => clamp(0, 255).truncate();
+  // int get restricted => this ~/ 0xff;
+}
+int? alphaFromStrength(num? strength) =>
+    (strength is double) && (strength >= 0 && strength <= 1)
+        ? (0xFF * strength).restricted
+        : (strength is double || strength is int)
+            ? strength!.restricted
+            : null;
+// File: lib/src/colors/spectrum.dart
+library colors;
+import 'package:flutter/material.dart' show MaterialAccentColor, MaterialColor;
+import 'package:flutter/widgets.dart';
+import 'package:nonsense_spectrum/colors.dart';
+import 'common.dart';
+import 'material.dart';
+enum SwatchMode {
+  /// Implies the useage of [Shading]. See the `withWhite()` extension method
+  /// for an example.
+  ///
+  /// A swatch range of colors could be derived such as:
+  ///
+  ///     c.withWhite(-r),
+  ///     ...,
+  ///     c.withWhite(-r/3),
+  ///     c.withWhite(-r/4),
+  ///     c,
+  ///     c.withWhite(r/4),
+  ///     c.withWhite(r/3),
+  ///     ...,
+  ///     c.withWhite(r)
+  shade,
+  /// Suggests the usage of [Color.alphaBlend], such as creating a swatch
+  /// where the lower colors `alphaBlend` the original color with [Colors.white]
+  /// with increasing degrees of color alpha strength, and the upper colors
+  /// `alphaBlend` the original with [Colors.black] with decreasing degrees of
+  /// color alpha strength.
+  ///
+  /// The lower values would progress toward white, regardless of original
+  /// color, while the upper values progress toward black, regardless of
+  /// original color. The medium value would resemble the original color.
+  desaturate,
+  /// For the generation of a color swatch that is comprised of equidistant
+  /// complimentary colors.
+  ///
+  /// For a [MaterialColor], a 10-count complements `List<Color>` would mostly
+  /// resemble a rainbow through the hues, but where `shade500` would be the
+  /// original color and progress around the color wheel past `shade900` and
+  /// looping back to `shade400` and every shade would have the same
+  /// "saturation" and "lightness" as the original color.
+  ///
+  /// For a [MaterialAccentColor], a 5-count complements `List<Color>` looks
+  /// less like a rainbow and more like a
+  /// resemble a rainbow through the hues, but where `shade500` would be the
+  /// original color and progress around the color wheel past `shade900` and
+  /// looping back to `shade400` and every shade would have the same
+  /// "saturation" and "lightness" as the original color.
+  complements,
+  /// Employ transparency in swatch development, such as fading from fully
+  /// transparent and stepping up to fully opaque.
+  ///
+  /// In the above example, the original color would not be a generated swatch's
+  /// medium, or default, value. The original color would exist at the very top
+  /// of the range produced for the swatch.
+  ///
+  /// This differs from a standard [MaterialColor], for example, as the
+  /// `shade500` or `materialColor[500]` value is equivalent to the value
+  /// returned by `materialColor` used by itself as a `Color`,
+  /// or `materialColor == materialColor[500]`.
+  ///
+  /// With this example, a generated `spectrumMaterialColor` using [fade]
+  /// returns the equivalent `Color` as that of the one represented by
+  /// `spectrumMaterialColor` used as itself when accessing its `shade900`,
+  /// or `spectrumMaterialColor == spectrumMaterialColor[900]`.
+  fade,
+}
+abstract class Spectrum {
+  /// Considers the provided number(?) [strength].
+  ///
+  /// If `strength` is between `0..1`, the return is an appropriate `int` for
+  /// the alpha channel representing that strength as an opacity multiplied by
+  /// the max channel value `0xFF`.
+  ///
+  /// After that check, if `strength` is an [int] or [double], the return is
+  /// `strength`.
+  ///
+  /// If all else fails, the return is `null`; say, if provided `strength`
+  /// itself is also `null`.
+  static int? alphaChannel(num? strength) => alphaFromStrength(strength);
+  /// Accepts a `Color` and returns a [MaterialColor] whose primary is the
+  /// provided `color` and whose `swatch` is generated according to [mode]
+  /// and [factor].
+  static MaterialColor materialColor(
+    Color color, {
+    SwatchMode mode = SwatchMode.shade,
+    double? factor,
+  }) =>
+      materialPrimaryFrom(color, mode, factor);
+  /// Accepts a `Color` and returns a [MaterialAccentColor] whose primary is the
+  /// provided `color` and whose `swatch` is generated according to [mode]
+  /// and [factor].
+  static MaterialAccentColor materialAccent(
+    Color color, {
+    SwatchMode mode = SwatchMode.shade,
+    double? factor,
+  }) =>
+      materialAccentFrom(color, mode, factor);
+}
+extension SpectrumUtils on Color {
+  /// A shortcut for [Color.lerp].
+  ///
+  /// The first color is `this` and the second is [other]. The parameter [blend]
+  /// corresponds to the `t` interpolation keyframe of the lerp and defaults to
+  /// `0.5`.
+  ///
+  /// If this lerp is `null`, return falls back to `this`.
+  Color blend(Color other, [double blend = 0.5]) =>
+      Color.lerp(this, other, blend) ?? this;
+  /// Returns `this` color as a [MaterialColor] via [materialPrimaryFrom]
+  /// using [SwatchMode.shade] and a `factor` of `200`.
+  MaterialColor get asMaterialColor
+      // (Color color, {SwatchMode mode = SwatchMode.shade, double? factor, })
+      =>
+      // materialPrimaryFrom(this, mode, factor);
+      materialPrimaryFrom(this, SwatchMode.shade, 200);
+  /// Returns `this` color as a [MaterialAccentColor] via [materialAccentFrom]
+  /// using [SwatchMode.shade] and a `factor` of `200`.
+  MaterialAccentColor get asMaterialAccent
+      // (Color color, {SwatchMode mode = SwatchMode.shade, double? factor,})
+      =>
+      // materialAccentFrom(color, mode, factor);
+      materialAccentFrom(this, SwatchMode.shade, 200);
+  /// Returns a two-entry `List<Color>` containing `this`
+  /// and the inverse of `this`, resembling:
+  ///
+  ///     [this, -this]
+  ///
+  /// This getter is more optimized than `complementary(2)`.
+  List<Color> get complementPair => [this, -this];
+  /// Returns a three-entry `List<Color>` containing `this` and two versions of
+  /// `this` with its components shifted, resembling:
+  ///
+  ///     [this == RGB, BRG, GBR]
+  ///
+  /// This getter is more optimized than `complementary(3)`.
+  List<Color> get complementTriad => [
+        this,
+        Color.fromARGB(alpha, blue, red, green),
+        Color.fromARGB(alpha, green, blue, red),
+      ];
+  // /// Returns a four-entry `List<Color>` containing `this` and the three
+  // /// equidistant colors obtained by traveling the color wheel clockwise
+  // /// starting with `this` and wrapping around the wheel back to `this`.
+  // ///
+  // /// Calls [complementary] with `count: 4`.
+  // ///
+  // /// (The final entry does not match `this`, it is the complement just
+  // /// before it.)
+  // List<Color> get complementTetrad => complementary(4);
+  // /// Returns a five-entry `List<Color>` containing `this` and the four
+  // /// equidistant colors obtained by traveling the color wheel clockwise
+  // /// starting with `this` and wrapping around the wheel back to `this`.
+  // ///
+  // /// Calls [complementary] with `count: 5`.
+  // ///
+  // /// (The final entry does not match `this`, it is the complement just
+  // /// before it.)
+  // List<Color> get complementPentad => complementary(5);
+  // /// Returns a ten-entry `List<Color>` containing `this` and the nine
+  // /// equidistant colors obtained by traveling the color wheel clockwise
+  // /// starting with `this` and wrapping around the wheel back to `this`.
+  // ///
+  // /// Calls [complementary] with `count: 10`. Could be used to generate
+  // /// a rainbow swatch palette starting at a given color.
+  // ///
+  // /// (The final entry does not match `this`, it is the complement just
+  // /// before it.)
+  // List<Color> get complementDecad => complementary(10);
+  /// The number of `Color`s returned in this `List` will match [count], and
+  /// the original color `this` will be first amongst them.
+  List<Color> complementary(int count, [double? distance]) {
+    double wrap(double component, double d) {
+      final sum = component + d;
+      if (sum >= 0 && sum <= 360) return sum;
+      return sum.remainder(360);
+    }
+    final shift = 360 / count;
+    final hsl = HSLColor.fromColor(this);
+    return List<Color>.generate(
+        count,
+        (int i) => HSLColor.fromAHSL(
+              hsl.alpha,
+              wrap(hsl.hue, shift * i),
+              hsl.saturation,
+              hsl.lightness,
+            ).toColor());
+  }
+}
+extension MaterialColorToList on MaterialColor {
+  /// Returns the `shade50 .. shade900` formed `List<Color>` from the
+  /// [MaterialColor] provided as `this`.
+  List<Color> get asList => [
+        shade50,
+        shade100,
+        shade200,
+        shade300,
+        shade400,
+        shade500,
+        shade600,
+        shade700,
+        shade800,
+        shade900,
+      ];
+  /// Returns the `shade50 .. shade900` formed `List<Color>` from the
+  /// [MaterialColor] provided as `this`.
+  ///
+  /// If [includePrimary] is `true`, an additional entry located at the
+  /// beginning will have the value of `this` itself. \
+  /// Default is `true` to differentiate versatility from [asList].
+  List<Color> toList({bool includePrimary = true}) => [
+        if (includePrimary) this,
+        shade50,
+        shade100,
+        shade200,
+        shade300,
+        shade400,
+        shade500,
+        shade600,
+        shade700,
+        shade800,
+        shade900,
+      ];
+}
+extension MaterialAccentToList on MaterialAccentColor {
+  /// Returns the `shade50 .. shade700` formed `List<Color>` from the
+  /// [MaterialAccentColor] provided as `this`.
+  List<Color> get asList => [
+        shade100,
+        shade200,
+        shade400,
+        shade700,
+      ];
+  /// Returns the `shade50 .. shade700` formed `List<Color>` from the
+  /// [MaterialAccentColor] provided as `this`.
+  ///
+  /// If [includePrimary] is `true`, an additional entry located at the
+  /// beginning will have the value of `this` itself. \
+  /// Default is `true` to differentiate versatility from [asList].
+  List<Color> toList({bool includePrimary = true}) => [
+        if (includePrimary) this,
+        shade100,
+        shade200,
+        shade400,
+        shade700,
+      ];
+}
+// File: lib/src/gradients/tween.dart
+library gradients;
+import 'dart:math' as math;
+import 'package:flutter/widgets.dart';
+import 'common.dart';
+import 'interpolation.dart';
+import 'steps/steps.dart';
+import 'utils.dart';
+class GradientTween extends Tween<Gradient?> {
+  /// An interpolation between two `Gradient`s.
+  ///
+  /// This class specializes the interpolation of [Tween<Gradient>]
+  /// to use [Gradient.lerp] and bespoke [IntermediateGradient]s.
+  ///
+  /// If needed, consider overriding [IntermediateGradient._copyWith] by
+  /// providing a custom [GradientCopyWith] during construction as
+  /// `overrideCopyWith`.
+  ///
+  /// See [Tween] for a discussion on how to use interpolation objects.
+  GradientTween({
+    Gradient? begin,
+    Gradient? end,
+    this.isAgressive = true,
+    GradientCopyWith overrideCopyWith = spectrumCopyWith,
+  })  : _copyWith = overrideCopyWith,
+        super(begin: begin, end: end);
+  /// Override this package's default `Gradient.copyWith()` method:
+  /// [spectrumCopyWith], a wrapper for [GradientUtils] extension
+  /// `Gradient.copyWith()`.
+  ///
+  /// ---
+  /// {@macro GradientCopyWith}
+  final GradientCopyWith _copyWith;
+  /// Control the method used to lerp the gradients.
+  final bool isAgressive;
+  /// Return the value this variable has at the given animation clock value [t].
+  ///
+  /// If [begin] and [end] are gradients of the same type or if either is
+  /// `null`, employs [Gradient.lerp]; which itself is a step up from the
+  /// standard behavior.
+  /// - [Gradient.lerp] will fade to `null` between gradients of dissimilar
+  ///   types which gives a fad-out/fade-in tween
+  ///
+  /// In all other circumstances, however, this method can generated an
+  /// [IntermediateGradient].
+  ///
+  /// This is done by comparing the [runtimeType] of [begin] & [end]
+  /// against [t], providing the first type before `0.5` and the second after;
+  /// creating a [GradientPacket] containing both gradients and passing [t]
+  /// which can provide *any requested potential* gradient property using lerp;
+  /// and interpolating the colors and stops of [begin] & [end] by creating
+  /// and passing along a [PrimitiveGradient].
+  ///
+  /// If needed, consider overriding [IntermediateGradient._copyWith] by
+  /// providing a custom [GradientCopyWith] during construction as
+  /// `overrideCopyWith`.
+  @override
+  Gradient lerp(double t) {
+    if (begin == null ||
+        end == null ||
+        (begin.runtimeType == end.runtimeType)) {
+      return Gradient.lerp(begin, end, t)!;
+    }
+    final resolvedBegin = begin is IntermediateGradient
+        ? (begin as IntermediateGradient).resolved
+        // : begin is Steps
+        //     ? (begin as Steps).asGradient
+        : begin!;
+    final resolvedEnd = end is IntermediateGradient
+        ? (end as IntermediateGradient).resolved
+        // : end is Steps
+        //     ? (end as Steps).asGradient
+        : end!;
+    if (resolvedBegin.runtimeType == resolvedEnd.runtimeType) {
+      return Gradient.lerp(resolvedBegin, resolvedEnd, t)!;
+    }
+    if (isAgressive) {
+      final interpolated =
+          PrimitiveGradient.fromStretchLerp(resolvedBegin, resolvedEnd, t);
+      return IntermediateGradient(
+        PrimitiveGradient.byProgressiveMerge(
+            t < 0.5 ? PrimitiveGradient.from(resolvedBegin) : interpolated,
+            t < 0.5 ? interpolated : PrimitiveGradient.from(resolvedEnd),
+            t < 0.5 ? t * 2 : (t - 0.5) * 2),
+        GradientPacket(resolvedBegin, resolvedEnd, t),
+        overrideCopyWith: _copyWith,
+      );
+    }
+    return IntermediateGradient(
+      PrimitiveGradient.byCombination(resolvedBegin, resolvedEnd, t),
+      GradientPacket(resolvedBegin, resolvedEnd, t),
+      overrideCopyWith: _copyWith,
+    );
+  }
+}
+class IntermediateGradient extends Gradient {
+  /// Considering the [GradientPacket.gradient] to output, [packet] of potential
+  /// properties from both of two gradients, and the [primitive] of colors and
+  /// stops formed from those same two gradients:
+  ///
+  /// Provide a dynamic [createShader] method that considers all the above to
+  /// create a `dart:ui` [Shader] that best represents a mix of these gradients.
+  IntermediateGradient(
+    this.primitive,
+    this.packet, {
+    GradientCopyWith overrideCopyWith = spectrumCopyWith,
+  })  : _copyWith = overrideCopyWith,
+        super(colors: primitive.colors, stops: primitive.stops);
+  /// The most basic representation of a [Gradient]: \
+  /// a list of colors and a list of stops.
+  ///
+  /// This object is created by factory [PrimitiveGradient.fromStretchLerp]
+  /// using these two lists of colors and two lists of stops and which
+  /// considers a keyframe `t` for interpolating between them.
+  final PrimitiveGradient primitive;
+  /// {@macro gradientpacket}
+  final GradientPacket packet;
+  /// Override this package's default `Gradient.copyWith()` method:
+  /// [spectrumCopyWith], a wrapper for [GradientUtils] extension
+  /// `Gradient.copyWith()`.
+  ///
+  /// ---
+  /// {@macro GradientCopyWith}
+  final GradientCopyWith _copyWith;
+  /// Falls back to `LinearGradient` if type is not hard-coded.
+  ///
+  /// Consider overriding [_copyWith] by providing a custom [GradientCopyWith]
+  /// during construction as `overrideCopyWith`.
+  @override
+  Shader createShader(Rect rect, {TextDirection? textDirection}) =>
+      resolved.createShader(rect, textDirection: textDirection);
+  @override
+  IntermediateGradient scale(double factor) =>
+      IntermediateGradient(primitive.scale(factor), packet);
+  /// Returns the literal `Gradient` result that this interpreted
+  /// `IntermediateGradient` represents with its interpolated [packet], a
+  /// [GradientPacket] with its own `t` keyframe, and [primitive] basic
+  /// gradient representation with colors and stops.
+  ///
+  /// The lists of colors and stops should already be same length by this point,
+  /// but something may have happened along the way through lerping or hot
+  /// restarting that leaves a few cycles with dissimilar values.
+  ///
+  /// This getter will secure their lengths to a safe value.
+  Gradient get resolved {
+    if (packet.gradient is LinearSteps) {
+      return (_copyWith(packet.gradient,
+              colors: colors,
+              stops: stops,
+              transform: packet.transform,
+              tileMode: packet.tileMode,
+              begin: packet.begin,
+              end: packet.end,
+              softness: packet.softness,
+              shadeFunction: packet.shadeFunction,
+              shadeFactor: packet.shadeFactor,
+              distance: packet.distance) as LinearSteps)
+          .asGradient;
+    } else if (packet.gradient is RadialSteps) {
+      return (_copyWith(packet.gradient,
+              colors: colors,
+              stops: stops,
+              transform: packet.transform,
+              tileMode: packet.tileMode,
+              center: packet.center,
+              radius: packet.radius,
+              focal: packet.focal,
+              focalRadius: packet.focalRadius,
+              softness: packet.softness,
+              shadeFunction: packet.shadeFunction,
+              shadeFactor: packet.shadeFactor,
+              distance: packet.distance) as RadialSteps)
+          .asGradient;
+    } else if (packet.gradient is SweepSteps) {
+      return (_copyWith(packet.gradient,
+              colors: colors,
+              stops: stops,
+              transform: packet.transform,
+              tileMode: packet.tileMode,
+              center: packet.center,
+              startAngle: packet.startAngle,
+              endAngle: packet.endAngle,
+              softness: packet.softness,
+              shadeFunction: packet.shadeFunction,
+              shadeFactor: packet.shadeFactor,
+              distance: packet.distance) as SweepSteps)
+          .asGradient;
+    }
+    final safeLength = math.min(colors.length, stops?.length ?? colors.length);
+    final safeColors =
+        //  (packet.gradient is Steps) ? packet.gradient.steppedColors :
+        <Color>[for (int i = 0; i < safeLength; i++) colors[i]];
+    final safeStops =
+        // (packet.gradient is Steps) ? packet.gradient.steppedStops :
+        stops != null
+            ? <double>[for (int i = 0; i < safeLength; i++) stops![i]]
+            : stops;
+    return _copyWith(
+      packet.gradient,
+      colors: safeColors,
+      stops: safeStops,
+      transform: packet.transform,
+      tileMode: packet.tileMode,
+      begin: packet.begin,
+      end: packet.end,
+      center: packet.center,
+      radius: packet.radius,
+      focal: packet.focal,
+      focalRadius: packet.focalRadius,
+      startAngle: packet.startAngle,
+      endAngle: packet.endAngle,
+      softness: packet.softness,
+      shadeFunction: packet.shadeFunction,
+      shadeFactor: packet.shadeFactor,
+      distance: packet.distance,
+    );
+  }
+  @override
+  Gradient withOpacity(double opacity)  {
+    final newColors = <Color>[];
+    for (final color in colors) {
+      newColors.add(color.withOpacity(opacity));
+    }
+    return _copyWith(
+      resolved,
+      colors: newColors,
+      stops: stops,
+      transform: transform,
+      tileMode: tileMode,
+      begin: begin,
+      end: end,
+      center: center,
+      radius: radius,
+      focal: focal,
+      focalRadius: focalRadius,
+      startAngle: startAngle,
+      endAngle: endAngle,
+      softness: softness,
+      shadeFunction: shadeFunction,
+      shadeFactor: shadeFactor,
+      distance: distance,
+    );
+  }
+}
+// File: lib/src/gradients/nill.dart
+library gradients;
+import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/widgets.dart';
+import 'steps/steps.dart';
+import 'utils.dart';
+extension NillGradients on Gradient {
+  ///     Gradient get asNill => nillify(  runtimeType);
+  ///
+  /// Returns an empty, transparent [Gradient] of type matching [runtimeType] if
+  /// one is available. If `this` gradient's type is not pre-mapped to an empty,
+  /// transparent "nill" gradient, `this` is copied with a number of pre-set
+  /// "nill"-style properties, such as transparent colors, 0 radius,
+  /// stops `[1.0, 1.0]`, etc.
+  ///
+  /// `Gradient.copyWith` itself falls back to returning a [new RadialGradient]
+  /// if type cannot be matched.
+  ///
+  /// Used as:
+  ///
+  ///     final radialGradient = RadialGradient(. . .);
+  ///     final emptyRadialGradient = radialGradient.asNill;
+  Gradient get asNill =>
+      nillify(runtimeType) ??
+      copyWith(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        begin: Alignment.center,
+        end: Alignment.center,
+        center: Alignment.center,
+        startAngle: 0.0,
+        endAngle: 0.01,
+        radius: 0.0,
+        focal: Alignment.center,
+        focalRadius: 0.0,
+      );
+  /// Returns an empty, transparent [Gradient] of type matching [type] if
+  /// one is available. Otherwise returns `null` such that [asNill] might
+  /// generate a "nill" gradient by `Gradient.copyWith()`, which itself falls
+  /// back to `RadialGradient` if [type] cannot be matched.
+  ///
+  /// Used as:
+  ///
+  ///     final emptyRadialGradient = NillGradients.nillify(RadialGradient);
+  ///
+  /// ---
+  /// TODO: Implement [GradientCopyWith]
+  static Gradient? nillify(Type type) => (type == LinearGradient)
+      ? linear
+      : (type == RadialGradient)
+          ? radial
+          : (type == SweepGradient)
+              ? sweep
+              : (type == LinearSteps)
+                  ? stepsLinear
+                  : (type == RadialSteps)
+                      ? stepsRadial
+                      : (type == SweepSteps)
+                          ? stepsSweep
+                          : null;
+  /// An empty, transparent [LinearGradient].
+  static LinearGradient get linear => const LinearGradient(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        begin: Alignment.center,
+        end: Alignment.center,
+      );
+  /// An empty, transparent [RadialGradient].
+  static RadialGradient get radial => const RadialGradient(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        center: Alignment.center,
+        radius: 0.0,
+        // focal: Alignment.center,
+        focal: null,
+        focalRadius: 0.0,
+      );
+  /// An empty, transparent [SweepGradient].
+  static SweepGradient get sweep => const SweepGradient(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        center: Alignment.center,
+        startAngle: 0.0,
+        endAngle: 0.01,
+      );
+  /// An empty, transparent [LinearSteps].
+  static LinearSteps get stepsLinear => const LinearSteps(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        begin: Alignment.center,
+        end: Alignment.center,
+      );
+  /// An empty, transparent [RadialSteps].
+  static RadialSteps get stepsRadial => const RadialSteps(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        center: Alignment.center,
+        radius: 0.0,
+        // focal: Alignment.center,
+        focal: null,
+        focalRadius: 0.0,
+      );
+  /// An empty, transparent [SweepSteps].
+  static SweepSteps get stepsSweep => const SweepSteps(
+        colors: [Colors.transparent, Colors.transparent],
+        // stops: [0.5, 0.5],
+        tileMode: TileMode.clamp,
+        center: Alignment.center,
+        startAngle: 0.0,
+        endAngle: 0.01,
+      );
+}
+// File: lib/src/gradients/utils.dart
+library gradients;
+import 'package:flutter/widgets.dart';
+import 'animation.dart';
+import 'common.dart';
+import 'interpolation.dart';
+import 'models.dart';
+import 'steps/shaded.dart';
+import 'steps/steps.dart';
+import 'tween.dart';
+import 'utils.dart';
+typedef GradientCopyWith = Gradient Function(
+  Gradient gradient, {
+  // Universal
+  List<Color>? colors,
+  List<double>? stops,
+  GradientTransform? transform,
+  TileMode? tileMode,
+  // Linear
+  AlignmentGeometry? begin,
+  AlignmentGeometry? end,
+  // Radial or Sweep
+  AlignmentGeometry? center,
+  // Radial
+  double? radius,
+  AlignmentGeometry? focal,
+  double? focalRadius,
+  // Sweep
+  double? startAngle,
+  double? endAngle,
+  // Steps
+  double? softness,
+  // Shaded Steps
+  ColorArithmetic? shadeFunction,
+  double? shadeFactor,
+  double? distance,
+});
+extension LinearGradientUtils on LinearGradient {
+  /// 📋 Returns a new copy of this `LinearGradient` with any provided
+  /// optional parameters overriding those of `this`.
+  LinearGradient copyWith({
+    List<Color>? colors,
+    List<double>? stops,
+    GradientTransform? transform,
+    TileMode? tileMode,
+    AlignmentGeometry? begin,
+    AlignmentGeometry? end,
+  }) =>
+      LinearGradient(
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        begin: begin ?? this.begin,
+        end: end ?? this.end,
+      );
+}
+extension RadialGradientUtils on RadialGradient {
+  /// 📋 Returns a new copy of this `RadialGradient` with any provided
+  /// optional parameters overriding those of `this`.
+  RadialGradient copyWith({
+    List<Color>? colors,
+    List<double>? stops,
+    GradientTransform? transform,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? radius,
+    AlignmentGeometry? focal,
+    double? focalRadius,
+  }) =>
+      RadialGradient(
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        center: center ?? this.center,
+        radius: radius ?? this.radius,
+        focal: focal ?? this.focal,
+        focalRadius: focalRadius ?? this.focalRadius,
+      );
+}
+extension SweepGradientUtils on SweepGradient {
+  /// 📋 Returns a new copy of this `SweepGradient` with any provided
+  /// optional parameters overriding those of `this`.
+  SweepGradient copyWith({
+    List<Color>? colors,
+    List<double>? stops,
+    GradientTransform? transform,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? startAngle,
+    double? endAngle,
+  }) =>
+      SweepGradient(
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        center: center ?? this.center,
+        startAngle: startAngle ?? this.startAngle,
+        endAngle: endAngle ?? this.endAngle,
+      );
+}
+extension GradientUtils on Gradient {
+  /// Returns a copy of this `Gradient` with its `List<Color>` [colors] reversed
+  /// as well as any potential stops.
+  Gradient get reversed => copyWith(
+        colors: colors.reversed.toList(),
+        stops: stops?.reversed.toList(),
+      );
+  /// Returns the [AnimatedGradient.observe] animated `Gradient` output from
+  /// a [new AnimatedGradient] constructed by `this` gradient and the
+  /// provided parameters.
+  ///
+  /// Provide, for example, an [AnimationController] as `controller` to push
+  /// the flow of the animation. Consider driving the controller by
+  /// `controller.repeat(reverse:true)`.
+  ///
+  /// The `storyboard` is a `Map<GradientAnimation, dynamic>` where `dynamic`
+  /// correlates to the given key.
+  /// - Map a [ColorArithmetic] to [GradientAnimation.colorArithmetic]
+  /// - Map a [StopsArithmetic] to [GradientAnimation.stopsArithmetic]
+  /// - Map a "TweenSpec", or `Map<GradientProperty, Tween<dynamic>>`
+  ///   to [GradientAnimation.tweenSpec]
+  Gradient animate({
+    required Animation<double> controller,
+    Map<GradientAnimation, dynamic> storyboard = const {},
+    GradientCopyWith overrideCopyWith = spectrumCopyWith,
+  }) =>
+      AnimatedGradient(
+        gradient: this,
+        controller: controller,
+        storyboard: storyboard,
+        overrideCopyWith: overrideCopyWith,
+      ).observe;
+  /// 📋 Returns a new copy of this `Gradient` with any appropriate
+  /// optional parameters overriding those of `this`.
+  ///
+  /// Recognizes [LinearGradient], [RadialGradient], & [SweepGradient],
+  /// as well as this package's [LinearSteps], [RadialSteps], & [SweepSteps].
+  ///
+  /// Defaults back to [RadialGradient] if `Type` cannot be matched.
+  /// (Radial is simply a design choice.)
+  ///
+  /// ```dart
+  /// Gradient copyWith({
+  ///   // Universal
+  // ignore: lines_longer_than_80_chars
+  ///   List<Color>? colors, List<double>? stops, GradientTransform? transform, TileMode? tileMode,
+  ///   // Linear
+  ///   AlignmentGeometry? begin, AlignmentGeometry? end,
+  ///   // Radial or Sweep
+  ///   AlignmentGeometry? center,
+  ///   // Radial
+  ///   double? radius, AlignmentGeometry? focal, double? focalRadius,
+  ///   // Sweep
+  ///   double? startAngle, double? endAngle,
+  ///   // Steps
+  ///   double? softness
+  ///   // Shaded Steps
+  ///   ColorArithmetic? shadeFunction, double? shadeFactor, double? distance
+  /// })
+  /// ```
+  Gradient copyWith({
+    // Universal
+    List<Color>? colors,
+    List<double>? stops,
+    GradientTransform? transform,
+    TileMode? tileMode,
+    // Linear
+    AlignmentGeometry? begin,
+    AlignmentGeometry? end,
+    // Radial or Sweep
+    AlignmentGeometry? center,
+    // Radial
+    double? radius,
+    AlignmentGeometry? focal,
+    double? focalRadius,
+    // Sweep
+    double? startAngle,
+    double? endAngle,
+    // Steps
+    double? softness,
+    // Shaded Steps
+    ColorArithmetic? shadeFunction,
+    double? shadeFactor,
+    double? distance,
+  }) {
+    if (this is PrimitiveGradient) {
+      return this;
+    } else if (this is IntermediateGradient) {
+      final copy = this as IntermediateGradient;
+      return IntermediateGradient(
+        copy.primitive,
+        // Packets do not carry colors or stops
+        GradientPacket(
+          copy.packet.a.copyWith(
+            transform: transform ?? copy.packet.a.transform,
+            tileMode: tileMode ?? copy.packet.a.tileMode,
+            begin: begin ?? copy.packet.a.begin,
+            end: end ?? copy.packet.a.end,
+            center: center ?? copy.packet.a.center,
+            radius: radius ?? copy.packet.a.radius,
+            focal: focal ?? copy.packet.a.focal,
+            focalRadius: focalRadius ?? copy.packet.a.focalRadius,
+            startAngle: startAngle ?? copy.packet.a.startAngle,
+            endAngle: endAngle ?? copy.packet.a.endAngle,
+            softness: softness ?? copy.packet.a.softness,
+            shadeFunction: shadeFunction ?? copy.packet.a.shadeFunction,
+            shadeFactor: shadeFactor ?? copy.packet.a.shadeFactor,
+            distance: distance ?? copy.packet.a.distance,
+          ),
+          copy.packet.b.copyWith(
+            transform: transform ?? copy.packet.b.transform,
+            tileMode: tileMode ?? copy.packet.b.tileMode,
+            begin: begin ?? copy.packet.b.begin,
+            end: end ?? copy.packet.b.end,
+            center: center ?? copy.packet.b.center,
+            radius: radius ?? copy.packet.b.radius,
+            focal: focal ?? copy.packet.b.focal,
+            focalRadius: focalRadius ?? copy.packet.b.focalRadius,
+            startAngle: startAngle ?? copy.packet.b.startAngle,
+            endAngle: endAngle ?? copy.packet.b.endAngle,
+            softness: softness ?? copy.packet.b.softness,
+            shadeFunction: shadeFunction ?? copy.packet.b.shadeFunction,
+            shadeFactor: shadeFactor ?? copy.packet.b.shadeFactor,
+            distance: distance ?? copy.packet.b.distance,
+          ),
+          copy.packet.t,
+        ),
+      );
+    } else if (this is LinearGradient) {
+      return (this as LinearGradient).copyWith(
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        begin: begin,
+        end: end,
+      );
+    } else if (this is SweepGradient) {
+      return (this as SweepGradient).copyWith(
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        center: center,
+        startAngle: startAngle,
+        endAngle: endAngle,
+      );
+    } else if (this is LinearShadedSteps) {
+      return (this as LinearShadedSteps).copyWith(
+        shadeFunction: shadeFunction,
+        shadeFactor: shadeFactor,
+        distance: distance,
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        begin: begin,
+        end: end,
+      );
+    } else if (this is RadialShadedSteps) {
+      return (this as RadialShadedSteps).copyWith(
+        shadeFunction: shadeFunction,
+        shadeFactor: shadeFactor,
+        distance: distance,
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        center: center,
+        radius: radius,
+        focal: focal,
+        focalRadius: focalRadius,
+      );
+    } else if (this is SweepShadedSteps) {
+      return (this as SweepShadedSteps).copyWith(
+        shadeFunction: shadeFunction,
+        shadeFactor: shadeFactor,
+        distance: distance,
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        center: center,
+        startAngle: startAngle,
+        endAngle: endAngle,
+      );
+    } else if (this is LinearSteps) {
+      return (this as LinearSteps).copyWith(
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        begin: begin,
+        end: end,
+      );
+    } else if (this is RadialSteps) {
+      return (this as RadialSteps).copyWith(
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        center: center,
+        radius: radius,
+        focal: focal,
+        focalRadius: focalRadius,
+      );
+    } else if (this is SweepSteps) {
+      return (this as SweepSteps).copyWith(
+        softness: softness,
+        colors: colors,
+        stops: stops,
+        transform: transform,
+        tileMode: tileMode,
+        center: center,
+        startAngle: startAngle,
+        endAngle: endAngle,
+      );
+    } else {
+      return RadialGradient(
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        center: center ?? this.center,
+        radius: radius ?? this.radius,
+        focal: focal ?? this.focal,
+        focalRadius: focalRadius ?? this.focalRadius,
+      );
+    }
+  }
+  //# UNIVERSAL
+  /// How this `Gradient` tiles in the plane beyond the region before its
+  /// starting stop and after its ending stop.
+  ///
+  /// For details, see [TileMode].
+  ///
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_linear.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_linear.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_linear.png)
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_radial.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_radial.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_radial.png)
+  ///
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_radialWithFocal.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_radialWithFocal.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_radialWithFocal.png)
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_sweep.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_sweep.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_sweep.png)
+  TileMode get tileMode => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.tileMode
+      : (this is LinearGradient)
+          ? (this as LinearGradient).tileMode
+          : (this is RadialGradient)
+              ? (this as RadialGradient).tileMode
+              : (this is SweepGradient)
+                  ? (this as SweepGradient).tileMode
+                  : (this is Steps)
+                      ? (this as Steps).tileMode
+                      : TileMode.clamp;
+  //# LINEAR
+  /// If this is a linear-type `Gradient`, returns `this.begin`.
+  /// Otherwise the fallback retrun value is [Alignment.center].
+  AlignmentGeometry get begin => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.begin
+      : (this is LinearGradient)
+          ? (this as LinearGradient).begin
+          : (this is LinearSteps)
+              ? (this as LinearSteps).begin
+              : Alignment.center;
+  /// If this is a linear-type `Gradient`, returns `this.end`.
+  /// Otherwise the fallback retrun value is [Alignment.center].
+  AlignmentGeometry get end => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.end
+      : (this is LinearGradient)
+          ? (this as LinearGradient).end
+          : (this is LinearSteps)
+              ? (this as LinearSteps).end
+              : Alignment.center;
+  //# RADIAL or SWEEP
+  /// If this is a radial- or sweep-type `Gradient`, returns `this.center`.
+  /// Otherwise the fallback retrun value is [Alignment.center].
+  AlignmentGeometry get center => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.center
+      : (this is RadialGradient)
+          ? (this as RadialGradient).center
+          : (this is SweepGradient)
+              ? (this as SweepGradient).center
+              : (this is RadialSteps)
+                  ? (this as RadialSteps).center
+                  : (this is SweepSteps)
+                      ? (this as SweepSteps).center
+                      : Alignment.center;
+  //# RADIAL
+  /// If this is a radial-type `Gradient`, returns `this.radius`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get radius => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.radius
+      : (this is RadialGradient)
+          ? (this as RadialGradient).radius
+          : (this is RadialSteps)
+              ? (this as RadialSteps).radius
+              : 0.0;
+  /// If this is a radial-type `Gradient`, returns `this.focal`
+  /// which may be `null`.
+  /// Otherwise the fallback retrun value is `null`.
+  AlignmentGeometry? get focal => (this is IntermediateGradient)
+      ? (this as IntermediateGradient).packet.focal
+      : (this is RadialGradient)
+          ? (this as RadialGradient).focal
+          : (this is RadialSteps)
+              ? (this as RadialSteps).focal
+              : null;
+  /// If this is a radial-type `Gradient`, returns `this.focalRadius`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get focalRadius => this is IntermediateGradient
+      ? (this as IntermediateGradient).packet.focalRadius
+      : this is RadialGradient
+          ? (this as RadialGradient).focalRadius
+          : this is RadialSteps
+              ? (this as RadialSteps).focalRadius
+              : 0.0;
+  //# SWEEP
+  /// If this is a sweep-type `Gradient`, returns `this.startAngle`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get startAngle => this is IntermediateGradient
+      ? (this as IntermediateGradient).packet.startAngle
+      : this is SweepGradient
+          ? (this as SweepGradient).startAngle
+          : this is SweepSteps
+              ? (this as SweepSteps).startAngle
+              : 0.0;
+  /// If this is a sweep-type `Gradient`, returns `this.endAngle`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get endAngle => this is IntermediateGradient
+      ? (this as IntermediateGradient).packet.endAngle
+      : this is SweepGradient
+          ? (this as SweepGradient).endAngle
+          : this is SweepSteps
+              ? (this as SweepSteps).endAngle
+              : 0.0;
+  //# STEPS
+  /// If this is a [Steps]-type `Gradient`, returns `this.steppedColors`.
+  /// Otherwise the fallback retrun value is [colors].
+  List<Color> get steppedColors =>
+      this is Steps ? (this as Steps).steppedColors : colors;
+  /// If this is a [Steps]-type `Gradient`, returns `this.steppedStops`.
+  /// Otherwise the fallback retrun value is [stops].
+  List<double>? get steppedStops =>
+      this is Steps ? (this as Steps).steppedStops : stops;
+  /// If this is a [Steps]-type `Gradient`, returns `this.softness`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get softness => this is IntermediateGradient
+      ? (this as IntermediateGradient).packet.softness
+      : this is Steps
+          ? (this as Steps).softness
+          : 0.0;
+  //# SHADED STEPS
+  /// If this is a `ShadedSteps`-type `Gradient`, returns `this.shadeFunction`.
+  /// Otherwise the fallback retrun value is [Shades.withWhite].
+  ColorArithmetic get shadeFunction => this is LinearShadedSteps
+      ? (this as LinearShadedSteps).shadeFunction
+      : this is RadialShadedSteps
+          ? (this as RadialShadedSteps).shadeFunction
+          : this is SweepShadedSteps
+              ? (this as SweepShadedSteps).shadeFunction
+              : Shades.withWhite;
+  /// If this is a `ShadedSteps`-type `Gradient`, returns `this.shadeFactor`.
+  /// Otherwise the fallback retrun value is `0`.
+  double get shadeFactor => this is LinearShadedSteps
+      ? (this as LinearShadedSteps).shadeFactor
+      : this is RadialShadedSteps
+          ? (this as RadialShadedSteps).shadeFactor
+          : this is SweepShadedSteps
+              ? (this as SweepShadedSteps).shadeFactor
+              : 0;
+  /// If this is a `ShadedSteps`-type `Gradient`, returns `this.distance`.
+  /// Otherwise the fallback retrun value is `0.0`.
+  double get distance => this is LinearShadedSteps
+      ? (this as LinearShadedSteps).distance
+      : this is RadialShadedSteps
+          ? (this as RadialShadedSteps).distance
+          : this is SweepShadedSteps
+              ? (this as SweepShadedSteps).distance
+              : 0.0;
+}
+// File: lib/src/gradients/interpolation.dart
+library gradients;
+import 'dart:collection' as collection;
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/widgets.dart';
+import 'common.dart';
+import 'models.dart';
+import 'steps/shaded.dart';
+import 'steps/steps.dart';
+import 'tween.dart';
+import 'utils.dart';
+List<double> _mergeListDouble(
+  List<double>? a,
+  List<double>? b,
+  double t, {
+  bool shouldSort = true,
+}) {
+  a ??= <double>[];
+  b ??= <double>[];
+  final commonLength = math.min(a.length, b.length);
+  final result = <double>[
+    for (int i = 0; i < commonLength; i++) ui.lerpDouble(a[i], b[i], t)!,
+    for (int i = commonLength; i < a.length && t < i / a.length / 100; i++)
+      // for (int i = commonLength; i < a.length; i++)
+      // ui.lerpDouble(a[i] * (1.0 - t), 1.0, t)!,
+      // ui.lerpDouble(a[i], 0.0, t)!,
+      // ui.lerpDouble(b.last, a[i], t < 0.5 ? (1.0 - t) * 2 : (1.0 - t) * 2)!,
+      ui.lerpDouble(b.last, a[i], 1.0 - t)!,
+    // ui.lerpDouble(a[i], b[(i / minLength).truncate()], t)!,
+    for (int i = commonLength; i < b.length && t > i / b.length / 100; i++)
+      // for (int i = commonLength; i < b.length; i++)
+      // ui.lerpDouble(b[i] * (t), 1.0, t)!,
+      // ui.lerpDouble(b[i], 0.0, t)!,
+      // ui.lerpDouble(a.last, b[i], t < 0.5 ? (t) * 2 : (1.0 - t) * 2)!,
+      // ui.lerpDouble(a.last, b[i], t)!,
+      ui.lerpDouble(1.0, b[i], t)!,
+    // ui.lerpDouble(b[i], a[(i / minLength).truncate()], t)!,
+  ];
+  if (shouldSort) result.sort();
+  return result;
+}
+List<Color> _mergeListColor(List<Color>? a, List<Color>? b, double t) {
+  if (a == null && b == null) return [Colors.transparent, Colors.transparent];
+  if (b == null) return a!;
+  if (a == null) return b;
+  final commonLength = math.min(a.length, b.length);
+  return <Color>[
+    for (int i = 0; i < commonLength; i++) Color.lerp(a[i], b[i], t)!,
+    // for (int i = commonLength; i < a.length; i++)
+    //   Color.lerp(a[i], b.last, t)!,
+    // for (int i = commonLength; i < b.length; i++)
+    //   Color.lerp(b[i], a.last, (1.0 - t))!,
+    for (int i = commonLength; i < a.length && t < i / a.length / 100; i++)
+      // for (int i = commonLength; i < a.length; i++)
+      // Color.lerp(null, a[i], 1.0 - t)!,
+      Color.lerp(null, b.last, 1.0 - t)!,
+    // Color.lerp(null, b[(i / commonLength).truncate()], 1.0 - t)!,
+    // a[i].withOpacity((1.0 - t).clamp(0.0, 1.0)),
+    for (int i = commonLength; i < b.length && t > i / b.length / 100; i++)
+      // for (int i = commonLength; i < b.length; i++)
+      // Color.lerp(b[i], null, 1.0 - t)!,
+      Color.lerp(b[i], a.last, 1.0 - t)!,
+    // Color.lerp(b[i], a[(i / commonLength).truncate()], 1.0 - t)!,
+    // b[i].withOpacity((t).clamp(0.0, 1.0)),
+  ];
+}
+@immutable
+class PrimitiveGradient {
+  /// The most basic representation of a gradient: \
+  /// `List<Color>` and `List<Stops>`.
+  const PrimitiveGradient._(this.colors, this.stops);
+  /// Dissolve a [Gradient] into a `PrimitiveGradient`.
+  ///
+  /// Borrows the provided [Gradient.colors] but feeds the (potentially `null`)
+  /// `List<double>` [Gradient.stops] into the method [interpretStops].
+  ///
+  /// If this passed [gradient] has explicitly-constructed `stops`, they are
+  /// returned unfettered. Otherwise an evenly-distributed list of implied stops
+  /// is generated considering the [Gradient] type and the list of `colors`.
+  factory PrimitiveGradient.from(Gradient gradient) =>
+      PrimitiveGradient._(gradient.colors, interpretStops(gradient));
+  /// This factory constructor will return a [PrimitiveGradient] whose [colors]
+  /// and [stops] are progressively merged (as [t] progresses from `0.0 -> 1.0`)
+  /// by lerping any entries that fall within a shared common list length range
+  /// and adding any potential extra entries sourced from [b] as `t` grows while
+  /// removing any potential extra entries sourced from [a] as `t` grows.
+  factory PrimitiveGradient.byProgressiveMerge(
+      PrimitiveGradient a, PrimitiveGradient b, double t) {
+    final lerpedStops = _mergeListDouble(a.stops, b.stops, t, shouldSort: true);
+    // final lerpedColors = _mergeListColor(a.colors, b.colors, t);
+    final lerpedColors = lerpedStops
+        .map<Color>(
+          (double stop) => Color.lerp(
+            // sample(a is Steps ? a.steppedColors : a.colors, aStops, stop),
+            // sample(b is Steps ? b.steppedColors : b.colors, bStops, stop),
+            sample(a.colors, a.stops, stop ),
+            sample(b.colors, b.stops, stop ),
+            t,
+          )!,
+        )
+        .toList(growable: false);
+    return PrimitiveGradient._(lerpedColors, lerpedStops);
+  }
+  /// Vanilla Flutter gradient merge process.
+  ///
+  /// Creates a new [collection.SplayTreeSet] with all stops from [a] & [b]
+  /// then maps a list of `Color`s to that set of all stops.
+  ///
+  /// The mapped colors will still represent those of gradient `a` when `t`
+  /// is `0.0` and represent gradient `b` when `t` is `1.0` by individually
+  /// [Color.lerp]ing each mapping between a [sample] from `a` and another
+  /// sample from `b` at the same keyframe `t`.
+  factory PrimitiveGradient.byCombination(Gradient a, Gradient b, double t) {
+    var aStops =  interpretStops(a);
+    var bStops =  interpretStops(b);
+    final stops = collection.SplayTreeSet<double>()
+      ..addAll(aStops)
+      ..addAll(bStops);
+    final interpolatedStops = stops.toList(growable: false);
+    // final stops = <double>[];
+    // var stops = aStops + bStops;
+    // var stops = aStops;
+    // for (var stop in bStops) {
+    //   if (!aStops.contains(stop)) stops.add(stop);
+    // }
+    // if ((t < 0.5 && b is Steps) || b is! Steps) stops.addAll(aStops);
+    // if ((t > 0.5 && a is Steps) || a is! Steps) stops.addAll(bStops);
+    // final interpolatedStops = stops..sort();
+    // final isDecal =
+    //     a.tileMode == TileMode.decal || b.tileMode == TileMode.decal;
+    final interpolatedColors = interpolatedStops
+        .map<Color>(
+          (double stop) => Color.lerp(
+            // sample(a is Steps ? a.steppedColors : a.colors, aStops, stop),
+            // sample(b is Steps ? b.steppedColors : b.colors, bStops, stop),
+            sample(a.colors, aStops, stop ),
+            sample(b.colors, bStops, stop ),
+            t,
+          )!,
+        )
+        .toList(growable: false);
+    return PrimitiveGradient._(interpolatedColors, interpolatedStops);
+  }
+  /// Interpolate two `Gradient`s' ***or*** `PrimitiveGradient`s'
+  /// [colors] and [stops] at `t`.
+  ///
+  /// This factory constructor will use the provided [PrimitiveGradient]s
+  /// or create them by [PrimitiveGradient.from] with provided [Gradient]s
+  /// but the smaller (by length of `colors` list) is [stretchedTo] have
+  /// the same number of entries as the larger.
+  ///
+  /// The returned [PrimitiveGradient] is then the result of [sameLengthLerp]ing
+  /// the stretched and non-stretched gradient at the provided keyframe [t].
+  factory PrimitiveGradient.fromStretchLerp(dynamic a, dynamic b, double t) {
+    final max = math.max(
+      a is Gradient
+          ? a.colors.length
+          : a is PrimitiveGradient
+              ? a.colors.length
+              : 0,
+      b is Gradient
+          ? b.colors.length
+          : b is PrimitiveGradient
+              ? b.colors.length
+              : 0,
+    );
+    final _a = a is PrimitiveGradient ? a : PrimitiveGradient.from(a);
+    final _b = b is PrimitiveGradient ? b : PrimitiveGradient.from(b);
+    // Force these gradients to have the same number of colors/stops
+    final stretchedA = _a.stretchedTo(max);
+    final stretchedB = _b.stretchedTo(max);
+    return PrimitiveGradient.sameLengthLerp(stretchedA, stretchedB, t);
+    // final lerpedColorsA =
+    //     lerpListColor(a.colors, stretchedA.colors, t < 0.5 ? t * 2 : 1.0);
+    // final lerpedStopsA =
+    //     lerpListDouble(a.stops, stretchedA.stops, t < 0.5 ? t * 2 : 1.0);
+    // final lerpedColorsB =
+    //     lerpListColor(b.colors, stretchedB.colors, t < 0.5 ? t * 2 : 1.0);
+    // final lerpedStopsB =
+    //     lerpListDouble(b.stops, stretchedB.stops, t < 0.5 ? t * 2 : 1.0);
+    //
+    // print('a.stops: ${interpretStops(a)}'); // print('stretchedA.stops: ${stretchedA.stops}'); // print('\nb.stops: ${interpretStops(b)}'); // print('stretchedB.stops: ${stretchedB.stops}');
+    // return PrimitiveGradient.lerp(
+    //   PrimitiveGradient._(lerpedColorsA, lerpedStopsA),
+    //   PrimitiveGradient._(lerpedColorsB, lerpedStopsB),
+    //   t,
+    // );
+  }
+  /// The interpolated colors of the true [Gradient]s that this
+  /// `PrimitiveGradient` boils down.
+  final List<Color> colors;
+  /// The interpolated stops of the true [Gradient]s that this
+  /// `PrimitiveGradient` boils down.
+  final List<double> stops;
+  /// Extrapolate the stop at position [t] from a configured list of [stops].
+  ///
+  /// This process considers the actual beginning, ending, and intermediate
+  /// values at each configured stop and returns a new stop that would resemble
+  /// the place along this stops timeline of given length represented by
+  /// keyframe [t].
+  ///
+  /// ---
+  /// For example, if `stops` is `[0.0, 0.5, 0.75, 0.9]` with a length of four,
+  /// a requested `t` percentage of `t: 0.8` returns the value `0.78`.
+  ///
+  /// The value returned may be expected to be `0.8` itself; however consider
+  /// the stops list only ranges `0.0 .. 0.9`.
+  ///
+  /// This method starts with the lowest available stop that at least is greater
+  /// than the truncated "position" of this `t` along a the list of
+  /// `stops.length`.
+  /// - As above, with `t: 0.8`, the position of this extrapolated stop is
+  ///   `0.8 * stops.length` (length is 4) = `3.2`
+  ///
+  /// The individual "progress" of this extrapolated stop is 20% (`3.2 - 3`)
+  /// of the way from the third stop to the fourth stop, `0.75` and `0.9`
+  /// in this case.
+  /// - `0.75 + (0.9 - 0.75) * 0.2 = 0.78`
+  static double extrapolateStop(List<double> stops, double t) {
+    final position = t * stops.length;
+    final progress = position - position.truncate();
+    final lastIndex = stops
+        .lastIndexWhere((double s) => s <= position.truncate() / stops.length);
+    final next = stops.firstWhere((double s) => s >= t, orElse: () => 1.0);
+    final result = stops[lastIndex] + (next - stops[lastIndex]) * progress;
+    // print('\nTARGET: $t; position: $position out of ${stops.length} | '
+    //     'lastIndex: $lastIndex, next original stop: $next, \nresult: $result');
+    return result;
+  }
+  /// Calculate the color at position [t] of the gradient
+  /// defined by [colors] and [stops]. \
+  /// Modified from vanilla [Gradient] `_sample()` to support fewer `Color`s.
+  ///
+  /// This abstracts the color selection process from the gradient type itself.
+  // // static Color sample(List<Color> colors, List<double> stops, double t, bool isDecal ) {
+  static Color sample(List<Color> colors, List<double> stops, double t) {
+    if (colors.isEmpty) {
+      colors = [Colors.transparent, Colors.transparent];
+    } else if (colors.length == 1) {
+      colors = colors + colors;
+    }
+    if (stops.isEmpty) {
+      stops = [0.0, 1.0];
+    } else if (stops.length == 1) {
+      if (!stops.contains(1.0)) {
+        stops = stops + [1.0];
+      } else {
+        stops = [0.0] + stops;
+      }
+    }
+    final safeLength = math.min(colors.length, stops.length);
+    final safeColors = <Color>[for (int i = 0; i < safeLength; i++) colors[i]];
+    //final safeStops = <double>[for (int i = 0; i < safeLength; i++) stops[i]];
+    for (var i = safeLength; i < stops.length; i++) {
+      safeColors.add(colors.last);
+    }
+    // Colors at beginning and ending of stops/gradient
+    if (t <= stops.first) {
+      return // isDecal ? colors.first.withOpacity(0.0) :
+          colors.first;
+    }
+    if (t >= stops.last) {
+      return // isDecal ? colors.last.withOpacity(0.0) :
+          colors.last;
+    }
+    final index = stops.lastIndexWhere((double s) => s <= t);
+    return Color.lerp(
+      safeColors[index],
+      safeColors[index + 1],
+      (t - stops[index]) / (stops[index + 1] - stops[index]),
+    )!;
+  }
+  /// Force this [PrimitiveGradient] to have [length] number of colors/stops.
+  ///
+  /// This method tries to return a gradient comprised of more colors and stops
+  /// than the original but that still represents the original visually.
+  ///
+  /// The returned `PrimitiveGradient` has first and last stops entries that
+  /// have stayed the same but its intermittent entries have been remapped to
+  /// accommodate extra colors/stops additions by [extrapolateStop]s and [sample].
+  PrimitiveGradient stretchedTo(int length) {
+    if (colors.length == length) return this;
+    final stretchedStops = List<double>.generate(
+      length,
+      (int i) {
+        if (i == 0) {
+          return stops.first;
+        } else if (i == length - 1) {
+          return stops.last;
+        } else {
+          return extrapolateStop(stops, (i + 1) / length);
+        }
+      },
+      growable: false,
+    );
+    final stretchedColors = stretchedStops
+        .map<Color>((double stop) => sample(colors, stops, stop))
+        .toList(growable: false);
+    // print('input length: ${colors.length}, '
+    // 'output length: ${stretchedColors.length} (desired: $length)\n\n');
+    return PrimitiveGradient._(stretchedColors, stretchedStops);
+  }
+  /// "Scaling" this gradient represents reducing the opacity of all its colors
+  /// by [Color.lerp] with `null` using [factor] as the keyframe `t`.
+  PrimitiveGradient scale(double factor) => PrimitiveGradient._(
+        colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(growable: false),
+        stops,
+      );
+  /// Linearally interpolate between `PrimitiveGradient`s [a] and [b] at any
+  /// given keyframe (`double`) [t], generally `0.0 .. 1.0`.
+  ///
+  /// This method presumes the gradients have the same number of [colors].
+  static PrimitiveGradient sameLengthLerp(
+    PrimitiveGradient a,
+    PrimitiveGradient b,
+    double t,
+  ) {
+    assert(a.colors.length == b.colors.length, 'list lengths should be equal');
+    final length = a.colors.length;
+    final lerpedStops = _mergeListDouble(a.stops, b.stops, t);
+    final lerpedColors = <Color>[
+      for (int i = 0; i < length; i++) Color.lerp(a.colors[i], b.colors[i], t)!,
+    ];
+    return PrimitiveGradient._(lerpedColors, lerpedStops);
+  }
+}
+@immutable
+class GradientPacket {
+  /// If a list of colors and list of stops makes a [PrimitiveGradient],
+  /// does this [GradientPacket] constitute a supergradient?
+  ///
+  /// {@template gradientpacket}
+  /// This `Packet` holds onto two `Gradient`s and a `t` keyframe.
+  ///
+  /// When requesting any potential `Gradient` property other than colors or
+  /// stops, this `Packet` may be called upon and will provide the relevant
+  /// lerp at [t].
+  ///
+  /// If either gradient does not have the requested property, a default value
+  /// is provided as per [GradientUtils].
+  /// {@endtemplate}
+  const GradientPacket(this.a, this.b, this.t);
+  /// A [Gradient] that this `GradientPacket` stores and represents.
+  ///
+  /// This packet's getters will consider [t] and use an appropriate `lerp()`
+  /// method to interpolate between gradient `a` and gradient `b`.
+  final Gradient a, b;
+  /// The keyframe for this `GradientPacket` for retrieving the properties
+  /// of these respective [a] & [b] `Gradient`s using an appropriate `lerp()`
+  /// method.
+  ///
+  /// A value of `t == 0` means this packet will return the properties of
+  /// `Gradient` [a], while `t == 1` has this packet return the properties
+  /// of `Gradient` [b].
+  ///
+  /// A `t` somewhere between `0..1` returns properties via this
+  /// `GradientPacket`'s getters that represent the mixture of the respective
+  /// property from [a] & [b] at a ratio where `t` is interpreted as
+  /// a percentage between `a..b`.
+  final double t;
+  Gradient get _a => a is IntermediateGradient
+      ? (a as IntermediateGradient).packet.t < 0.5
+          ? (a as IntermediateGradient).packet.a
+          : (a as IntermediateGradient).packet.b
+      // : a is Steps
+      //     ? (a as Steps).asGradient
+      : a;
+  Gradient get _b => b is IntermediateGradient
+      ? (b as IntermediateGradient).packet.t < 0.5
+          ? (b as IntermediateGradient).packet.a
+          : (b as IntermediateGradient).packet.b
+      // : b is Steps
+      //     ? (b as Steps).asGradient
+      : b;
+  bool get _areSame => _a.runtimeType == _b.runtimeType;
+  /// If [a] & [b] are the same `Type` of [Gradient], returns [t].
+  ///
+  /// Otherwise doubles [t] to to return range `0..1` while `t<0.5` & doubles
+  /// [t] after subtracting `0.5` to to return range `0..1` while `t>0.5`.
+  double get _t => _areSame
+      ? t
+      : t < 0.5
+          ? t * 2
+          : (t - 0.5) * 2;
+  bool get _shareLinearProps {
+    final aType = _a.runtimeType;
+    final bType = _b.runtimeType;
+    return _areSame ||
+        ((aType == LinearGradient ||
+                aType == LinearSteps ||
+                aType == LinearShadedSteps) &&
+            (bType == LinearGradient ||
+                bType == LinearSteps ||
+                bType == LinearShadedSteps));
+  }
+  bool get _shareRadialProps {
+    final aType = _a.runtimeType;
+    final bType = _b.runtimeType;
+    return _areSame ||
+        ((aType == RadialGradient ||
+                aType == RadialSteps ||
+                aType == RadialShadedSteps) &&
+            (bType == RadialGradient ||
+                bType == RadialSteps ||
+                bType == RadialShadedSteps));
+  }
+  bool get _shareSweepProps {
+    final aType = _a.runtimeType;
+    final bType = _b.runtimeType;
+    return _areSame ||
+        ((aType == SweepGradient ||
+                aType == SweepSteps ||
+                aType == SweepShadedSteps) &&
+            (bType == SweepGradient ||
+                bType == SweepSteps ||
+                bType == SweepShadedSteps));
+  }
+  bool get _shareCenterProp {
+    final aType = _a.runtimeType;
+    final bType = _b.runtimeType;
+    return _areSame ||
+        ((aType == RadialGradient ||
+                aType == RadialSteps ||
+                aType == RadialShadedSteps ||
+                aType == SweepGradient ||
+                aType == SweepSteps ||
+                aType == SweepShadedSteps) &&
+            (bType == RadialGradient ||
+                bType == RadialSteps ||
+                bType == RadialShadedSteps ||
+                bType == SweepGradient ||
+                bType == SweepSteps ||
+                bType == SweepShadedSteps));
+  }
+  //# UNIVERSAL
+  /// {@template gradientpacket_getter}
+  /// Returns the interpolation of this [Gradient] / `Gradient`-subclass
+  /// property at keyframe [t] for gradients [a] and [b].
+  ///
+  /// See [GradientUtils] to understand how fallbacks are determined for
+  /// subclasses that do not contain this property.
+  /// {@endtemplate}
+  Gradient get gradient => t < 0.5 ? _a : _b;
+  /// {@macro gradientpacket_getter}
+  GradientTransform? get transform => t < 0.5 ? _a.transform : _b.transform;
+  /// {@macro gradientpacket_getter}
+  TileMode get tileMode => t < 0.5 ? _a.tileMode : _b.tileMode;
+  //# LINEAR
+  /// {@macro gradientpacket_getter}
+  AlignmentGeometry get begin =>
+      AlignmentGeometry.lerp(_a.begin, _b.begin, _shareLinearProps ? t : _t)!;
+  /// {@macro gradientpacket_getter}
+  AlignmentGeometry get end =>
+      AlignmentGeometry.lerp(_a.end, _b.end, _shareLinearProps ? t : _t)!;
+  //# RADIAL or SWEEP
+  /// {@macro gradientpacket_getter}
+  AlignmentGeometry get center =>
+      AlignmentGeometry.lerp(_a.center, _b.center, _shareCenterProp ? t : _t)!;
+  //# RADIAL
+  /// {@macro gradientpacket_getter}
+  double get radius => math.max(
+        0.0,
+        ui.lerpDouble(_a.radius, _b.radius, _shareRadialProps ? t : _t)!,
+      );
+  /// {@macro gradientpacket_getter}
+  AlignmentGeometry? get focal => AlignmentGeometry.lerp(
+        _a.focal,
+        _b.focal,
+        _shareRadialProps ? t : _t,
+      );
+  /// {@macro gradientpacket_getter}
+  double get focalRadius => math.max(
+      0.0,
+      ui.lerpDouble(
+        _a.focalRadius,
+        _b.focalRadius,
+        _shareRadialProps ? t : _t,
+      )!);
+  //# SWEEP
+  /// {@macro gradientpacket_getter}
+  double get startAngle => math.max(
+        0.0,
+        ui.lerpDouble(_a.startAngle, _b.startAngle, _shareSweepProps ? t : _t)!,
+      );
+  /// {@macro gradientpacket_getter}
+  double get endAngle => math.max(
+        0.0,
+        ui.lerpDouble(_a.endAngle, _b.endAngle, _shareSweepProps ? t : _t)!,
+      );
+  //# STEPS
+  /// {@macro gradientpacket_getter}
+  double get softness =>
+      math.max(0.0, ui.lerpDouble(_a.softness, _b.softness, _t)!);
+  //# SHADED STEPS
+  /// {@macro gradientpacket_getter}
+  ColorArithmetic get shadeFunction =>
+      t < 0.5 ? _a.shadeFunction : _b.shadeFunction;
+  /// {@macro gradientpacket_getter}
+  double get shadeFactor =>
+      math.max(0.0, ui.lerpDouble(a.shadeFactor, b.shadeFactor.toDouble(), t)!);
+  /// {@macro gradientpacket_getter}
+  double get distance =>
+      math.max(0.0, ui.lerpDouble(_a.distance, _b.distance, _t)!);
+}
+// File: lib/src/gradients/steps/steps.dart
+library gradients;
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
+import 'package:flutter/widgets.dart';
+import '../../../gradients.dart';
+import '../common.dart';
+import 'operators.dart';
+abstract class Steps extends Gradient {
+  /// These `Steps` work a little bit differently than standard `Gradient`s.
+  ///
+  /// The [Gradient.colors] & [Gradient.stops] properties are duplicated to
+  /// create hard-edge transitions instead of smooth ones.
+  ///
+  // But while [colors] is a duplicated [Gradient.colors], these [stops], if
+  // provided manually instead of using implication, are expected to follow
+  // a simple, but important format:
+  // - This constructor's `stops` *should* start with a `0.0`, as after
+  //   list duplication, the second entry in the list will be eliminated.
+  // - This constructor's `stops` *should not* end with a `1.0`, as that will
+  //   be added automatically.
+  ///
+  /// A larger [softness] makes this `FooSteps` more like a standard
+  /// `FooGradient`. Default is `0.0`. High-resolution displays are
+  /// well-suited for displaying the non-anti-aliased `Steps` formed when
+  /// `softness == 0.0`.
+  const Steps({
+    this.softness = 0.0,
+    required List<Color> colors,
+    List<double>? stops,
+    this.tileMode = TileMode.clamp,
+    GradientTransform? transform,
+  }) : super(colors: colors, stops: stops, transform: transform);
+  /// An incredibly small `double` to provide as an `additive` for each second
+  /// entry when duplicating [stops] for this `Steps`.
+  ///
+  /// A larger  `softness` has the effect of reducing the hard edge in-between
+  /// each color in this `Steps`, making it more like its original [Gradient]
+  /// counterpart.
+  ///
+  /// Imagine [stops] is `[0.0, 0.3, 0.8]`*. Providing a `softness` of `0.001`,
+  /// the effective, resolved [stops] for this `Gradient` is now:
+  ///
+  /// `[0.0, 0.001, 0.3, 0.3001, 0.8, 0.8001]`.
+  ///
+  /// ## \* *Note*:
+  /// These `Steps` work a little bit differently than standard `Gradient`s.
+  ///
+  /// The [Gradient.colors] & [Gradient.stops] fields are overridden
+  /// with getters that duplicate these `List`s.
+  ///
+  /// But while [colors] is a duplicated [Gradient.colors], these [stops], if
+  /// provided manually instead of using interpretation, are expected to follow
+  /// a simple, but important format:
+  /// - This constructor's `stops` *should* start with a `0.0`, as after
+  ///   list duplication, the second entry in the list will be eliminated.
+  /// - This constructor's `stops` *should not* end with a `1.0`, as that will
+  ///   be added automatically.
+  final double softness;
+  /// How these `Steps` should tile the plane beyond the region before its
+  /// starting stop and after its ending stop.
+  ///
+  /// For details, see [TileMode].
+  ///
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_linear.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_linear.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_linear.png)
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_radial.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_radial.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_radial.png)
+  ///
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_radialWithFocal.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_radialWithFocal.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_radialWithFocal.png)
+  /// ---
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_clamp_sweep.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_mirror_sweep.png)
+  /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_repeated_sweep.png)
+  final TileMode tileMode;
+  /// A duplicated list of [colors] by [CopyColors].
+  List<Color> get steppedColors => ~colors;
+  /// A duplicated list of [stops] by [CopyStops] (which may be `null`, in
+  /// which case [stopsOrImplied] is employed).
+  ///
+  /// An optional [softness] is used during the list entry duplication process
+  /// to make every duplicate just *slightly* larger than the original entry.
+  List<double> get steppedStops {
+    final _stops =
+        (List<double>.from(stopsOrImplied(stops, colors.length + 1)));
+    // If local `stops` is not `null`, above [stopsOrImplied] will return
+    // that exact value. In that case, we do not want to build a stop list
+    // with an extra value and cut it off... just use the provided `stops`.
+    if (stops == null) _stops.removeLast();
+    return _stops ^ softness
+      ..removeAt(0)
+      ..add(1.0);
+  }
+  /// Resolve these `Steps` to its smooth `Gradient` counterpart by [colors]
+  /// and [stops] duplication, considering [softness].
+  Gradient get asGradient;
+  /// Resolve these `Steps` to its smooth `Gradient` counterpart, then use that
+  /// gradient's `createShader()` method.
+  ///
+  /// According to [Gradient.createShader]:
+  /// > "Creates a [Shader] for this gradient to fill the given rect.
+  /// >
+  /// > If the gradient's configuration is text-direction-dependent, for example
+  /// > it uses [AlignmentDirectional] objects instead of [Alignment] objects,
+  /// > then the textDirection argument must not be null.
+  /// >
+  /// > The shader's transform will be resolved from the [transform] of this
+  /// > gradient."
+  @override
+  ui.Shader createShader(ui.Rect rect, {ui.TextDirection? textDirection}) =>
+      asGradient.createShader(rect, textDirection: textDirection);
+}
+class LinearSteps extends Steps {
+  /// A [Steps] gradient differs from a standard [Gradient] in its progression
+  /// from one color to the next. Instead of smoothly transitioning between
+  /// colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// A larger [softness] makes this `LinearSteps` more like a standard
+  /// `LinearGradient`. Default is `0.001`. High-resolution displays are
+  /// well-suited for displaying the non-anti-aliased `Steps` formed when
+  /// `softness == 0.0`.
+  ///
+  /// See [Steps] for more information.
+  const LinearSteps({
+    double softness = 0.001,
+    required List<Color> colors,
+    List<double>? stops,
+    this.begin = Alignment.centerLeft,
+    this.end = Alignment.centerRight,
+    TileMode tileMode = TileMode.clamp,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// The color that correlates to `stops` entry `0` (the first color) is placed
+  /// at `AlignmentGeometry` [begin] and the final stop is placed at [end],
+  /// with all the intermediate colors filling the space between them.
+  ///
+  /// See [LinearGradient.begin] & [LinearGradient.end].
+  final AlignmentGeometry begin, end;
+  @override
+  LinearGradient get asGradient => LinearGradient(
+      colors: steppedColors,
+      stops: steppedStops,
+      begin: begin,
+      end: end,
+      tileMode: tileMode,
+      transform: transform);
+  /// Returns a new [LinearSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  LinearSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) => (a == null || (a is LinearSteps))
+      ? LinearSteps.lerp(a as LinearSteps?, this, t)
+      : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) => (b == null || (b is LinearSteps))
+      ? LinearSteps.lerp(this, b as LinearSteps?, t)
+      : super.lerpTo(b, t);
+  /// Linearly interpolate between two [LinearSteps].
+  ///
+  /// If either `LinearSteps` is `null`, this function linearly interpolates
+  /// from a `LinearSteps` that matches the other in [begin], [end], [stops] and
+  /// [tileMode] and with the same [colors] but transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static LinearSteps? lerp(LinearSteps? a, LinearSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    // final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    //     t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+    //     t < 0.5 ? stretched : PrimitiveGradient.from(b),
+    //     // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+    //     t);
+    final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return LinearSteps(
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      begin: AlignmentGeometry.lerp(a.begin, b.begin, t)!,
+      end: AlignmentGeometry.lerp(a.end, b.end, t)!,
+    );
+  }
+  /// 📋 Returns a new copy of this `LinearSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  LinearSteps copyWith({
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    AlignmentGeometry? begin,
+    AlignmentGeometry? end,
+    TileMode? tileMode,
+    GradientTransform? transform,
+  }) =>
+      LinearSteps(
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        begin: begin ?? this.begin,
+        end: end ?? this.end,
+        tileMode: tileMode ?? this.tileMode,
+        transform: transform ?? this.transform,
+      );
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    return other is LinearSteps &&
+        other.softness == softness &&
+        listEquals<Color>(other.colors, colors) &&
+        listEquals<double>(other.stops, stops) &&
+        other.tileMode == tileMode &&
+        other.begin == begin &&
+        other.end == end;
+  }
+  @override
+  String toString() =>
+      '${objectRuntimeType(this, 'LinearSteps')} (softness: $softness, '
+      '(softness: $softness, colors: $colors, stops: $stops, '
+      '$tileMode, begin: $begin, end: $end)';
+  @override
+  Gradient withOpacity(double opacity)  => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
+  // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+class RadialSteps extends Steps {
+  /// A [Steps] gradient differs from a standard [Gradient] in its progression
+  /// from one color to the next. Instead of smoothly transitioning between
+  /// colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// A larger [softness] makes this `RadialSteps` more like a standard
+  /// `RadialGradient`. Default is `0.0025`. High-resolution displays are
+  /// well-suited for displaying the non-anti-aliased `Steps` formed when
+  /// `softness == 0.0`.
+  ///
+  /// See [Steps] for more information.
+  const RadialSteps({
+    double softness = 0.0025,
+    required List<Color> colors,
+    List<double>? stops,
+    this.center = Alignment.center,
+    this.radius = 0.5,
+    this.focal,
+    this.focalRadius = 0.0,
+    TileMode tileMode = TileMode.clamp,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// The color that correlates to `stops` entry `0` (the first color) is placed
+  /// at `AlignmentGeometry` [center], an offset into the `(-1,-1) x (1,1)`
+  /// "paintbox" onto which the gradient will be painted.
+  ///
+  /// For example, `center: Alignment(0,0)` will place the radial gradient in
+  /// the center of this paintbox. This is a standard known as
+  /// [Alignment.center].
+  ///
+  /// See [RadialGradient.center].
+  final AlignmentGeometry center;
+  /// The distance from [center] to the outer edge of the final [stops] entry,
+  /// or final color, is determined by this `radius` as a percentage of the
+  /// shortest side of the "paintbox" onto which to paint this gradient.
+  ///
+  /// In a `100px x 200px` paintbox, a [radius] of `1.0` will place the final
+  /// stop at a distance `100px` from the [center].
+  ///
+  /// See [RadialGradient.radius].
+  final double radius;
+  /// > "The focal point of the gradient. If specified, the gradient will appear
+  /// > to be focused along the vector from [center] to focal."
+  ///
+  /// See [RadialGradient.focal].
+  final AlignmentGeometry? focal;
+  /// See [RadialGradient.focalRadius].
+  final double focalRadius;
+  @override
+  RadialGradient get asGradient => RadialGradient(
+      colors: steppedColors,
+      stops: steppedStops,
+      center: center,
+      radius: radius,
+      focal: focal,
+      focalRadius: focalRadius,
+      tileMode: tileMode,
+      transform: transform);
+  /// Returns a new [RadialSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  RadialSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) => (a == null || (a is RadialSteps))
+      ? RadialSteps.lerp(a as RadialSteps?, this, t)
+      : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) => (b == null || (b is RadialSteps))
+      ? RadialSteps.lerp(this, b as RadialSteps?, t)
+      : super.lerpTo(b, t);
+  /// Linearly interpolate between two [RadialSteps]s.
+  ///
+  /// If either gradient is `null`, this function linearly interpolates from a
+  /// a gradient that matches the other gradient in [center], [radius], [stops]
+  /// and [tileMode] and with the same [colors] but transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static RadialSteps? lerp(RadialSteps? a, RadialSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    // final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    //     t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+    //     t < 0.5 ? stretched : PrimitiveGradient.from(b),
+    //     // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+    //     t);
+    final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return RadialSteps(
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      center: AlignmentGeometry.lerp(a.center, b.center, t)!,
+      radius: math.max(0.0, ui.lerpDouble(a.radius, b.radius, t)!),
+      focal: AlignmentGeometry.lerp(a.focal, b.focal, t),
+      focalRadius:
+          math.max(0.0, ui.lerpDouble(a.focalRadius, b.focalRadius, t)!),
+    );
+  }
+  /// 📋 Returns a new copy of this `RadialSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  RadialSteps copyWith({
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? radius,
+    AlignmentGeometry? focal,
+    double? focalRadius,
+    GradientTransform? transform,
+  }) =>
+      RadialSteps(
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        center: center ?? this.center,
+        radius: radius ?? this.radius,
+        focal: focal ?? this.focal,
+        focalRadius: focalRadius ?? this.focalRadius,
+      );
+  @override
+  bool operator ==(Object other) => (identical(this, other))
+      ? true
+      : (other.runtimeType != runtimeType)
+          ? false
+          : other is RadialSteps &&
+              other.softness == softness &&
+              listEquals<Color>(other.colors, colors) &&
+              listEquals<double>(other.stops, stops) &&
+              other.tileMode == tileMode &&
+              other.center == center &&
+              other.radius == radius &&
+              other.focal == focal &&
+              other.focalRadius == focalRadius;
+  @override
+  String toString() => '${objectRuntimeType(this, 'RadialSteps')}'
+      '(softness: $softness, colors: $colors, stops: $stops, '
+      '$tileMode, center: $center, radius: $radius, '
+      'focal: $focal, focalRadius: $focalRadius)';
+  @override
+  Gradient withOpacity(double opacity) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
+  // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+class SweepSteps extends Steps {
+  /// A [Steps] gradient differs from a standard [Gradient] in its progression
+  /// from one color to the next. Instead of smoothly transitioning between
+  /// colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// A larger [softness] makes this `SweepSteps` more like a standard
+  /// `SweepGradient`. Default is `0.0`. High-resolution displays are
+  /// well-suited for displaying the non-anti-aliased `Steps` formed when
+  /// `softness == 0.0`.
+  ///
+  /// See [Steps] for more information.
+  const SweepSteps({
+    double softness = 0.0,
+    required List<Color> colors,
+    List<double>? stops,
+    TileMode tileMode = TileMode.clamp,
+    this.center = Alignment.center,
+    this.startAngle = 0.0,
+    this.endAngle = math.pi * 2,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// The color that correlates to `stops` entry `0` (the first color) is placed
+  /// at `AlignmentGeometry` [center], an offset into the `(-1,-1) x (1,1)`
+  /// "paintbox" onto which the gradient will be painted.
+  ///
+  /// For example, `center: Alignment(0,0)` will place the radial gradient in
+  /// the center of this paintbox. This is a standard known as
+  /// [Alignment.center].
+  ///
+  /// See [SweepGradient.center].
+  final AlignmentGeometry center;
+  /// The `startAngle` is just as described by [SweepGradient.startAngle]:
+  ///
+  /// > "The angle in radians at which stop `0.0` of the gradient is placed.
+  /// >
+  /// > Defaults to `0.0`."
+  ///
+  /// The `endAngle` is also just as described by [SweepGradient.endAngle]:
+  /// > "The angle in radians at which stop `1.0` of the gradient is placed.
+  /// >
+  /// > Defaults to  `math.pi * 2`."
+  ///
+  /// *Where `math` is a named import as `import 'dart:math' as math;`*
+  final double startAngle, endAngle;
+  @override
+  SweepGradient get asGradient => SweepGradient(
+      colors: steppedColors,
+      stops: steppedStops,
+      center: center,
+      startAngle: startAngle,
+      endAngle: endAngle,
+      tileMode: tileMode,
+      transform: transform);
+  /// Returns a new [SweepSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  SweepSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) => (a == null || (a is SweepSteps))
+      ? SweepSteps.lerp(a as SweepSteps?, this, t)
+      : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) => (b == null || (b is SweepSteps))
+      ? SweepSteps.lerp(this, b as SweepSteps?, t)
+      : super.lerpTo(b, t);
+  /// Linearly interpolate between two [SweepSteps]s.
+  ///
+  /// If either gradient is `null`, this function linearly interpolates from a
+  /// a gradient that matches the other gradient in [center], [startAngle],
+  /// [endAngle], [stops] & [tileMode] and with the same [colors] but
+  /// transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static SweepSteps? lerp(SweepSteps? a, SweepSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    // final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    //     t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+    //     t < 0.5 ? stretched : PrimitiveGradient.from(b),
+    //     // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+    //     t);
+    final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return SweepSteps(
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      center: AlignmentGeometry.lerp(a.center, b.center, t)!,
+      startAngle: math.max(0.0, ui.lerpDouble(a.startAngle, b.startAngle, t)!),
+      endAngle: math.max(0.0, ui.lerpDouble(a.endAngle, b.endAngle, t)!),
+    );
+  }
+  /// 📋 Returns a new copy of this `SweepSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  SweepSteps copyWith({
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? startAngle,
+    double? endAngle,
+    GradientTransform? transform,
+  }) =>
+      SweepSteps(
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        center: center ?? this.center,
+        startAngle: startAngle ?? this.startAngle,
+        endAngle: endAngle ?? this.endAngle,
+        tileMode: tileMode ?? this.tileMode,
+        transform: transform ?? this.transform,
+      );
+  @override
+  bool operator ==(Object other) => (identical(this, other))
+      ? true
+      : (other.runtimeType != runtimeType)
+          ? false
+          : other is SweepSteps &&
+              other.softness == softness &&
+              listEquals<Color>(other.colors, colors) &&
+              listEquals<double>(other.stops, stops) &&
+              other.center == center &&
+              other.startAngle == startAngle &&
+              other.endAngle == endAngle &&
+              other.tileMode == tileMode;
+  @override
+  String toString() => '${objectRuntimeType(this, 'SweepSteps')}'
+      '(softness: $softness, colors: $colors, stops: $stops, '
+      '$tileMode, center: $center, '
+      'startAngle: $startAngle, endAngle: $endAngle)';
+  @override
+  Gradient withOpacity(double opacity) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, opacity)!)
+            .toList(),
+      );
+  // '\nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+// File: lib/src/gradients/steps/shaded.dart
+library gradients;
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
+import 'package:flutter/widgets.dart';
+import '../../../gradients.dart';
+import '../common.dart';
+import 'operators.dart';
+List<double> _quadruple(
+  List<double>? stops,
+  List<Color> colors,
+  double softness,
+  double distance,
+) {
+  stops ??= List<double>.from(stopsOrImplied(stops, colors.length + 1))
+    ..removeLast();
+  return stops % ShadeStep(distance, softness);
+}
+class LinearShadedSteps extends LinearSteps {
+  /// A standard [Steps] gradient differs from the average [Gradient] in its
+  /// progression from one color to the next. Instead of smoothly transitioning
+  /// between colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// This `LinerShadedSteps` evolves [LinearSteps] one step further by creating
+  /// the "stepping" effect across four colors/stops entries instead of only
+  /// two. This allows greater control over the inner appearance of *each*
+  /// given step; "shading" it darker or "shading" it more transparent, for
+  /// example, in accordance with [shadeFunction].
+  ///
+  /// The default `shadeFunction` is [Shades.withWhite] and the default
+  /// [shadeFactor] is `-90`. In this default scenario, each step will
+  /// transition from `color` to `color.withwhite(-90)`.
+  ///
+  /// The [distance], defaulting at `0.6` is a percentage between the start and
+  /// end of *each* step color to begin transitioning toward the color value
+  /// with [shadeFunction] applied to it.
+  ///
+  /// See [LinearSteps] for more information.
+  const LinearShadedSteps({
+    this.shadeFunction = Shades.withWhite,
+    this.shadeFactor = -90,
+    this.distance = 0.6,
+    double softness = 0.0,
+    required List<Color> colors,
+    List<double>? stops,
+    AlignmentGeometry begin = Alignment.centerLeft,
+    AlignmentGeometry end = Alignment.centerRight,
+    TileMode tileMode = TileMode.clamp,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          begin: begin,
+          end: end,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// For any given "step", comprised of a single color "quadruplicated" across
+  /// four stops, the `shadeFunction` will be called on the color and this
+  /// result is placed as the fourth, final stop for this color step.
+  ///
+  /// There is a standard gradient transition between `color` and the "shaded"
+  /// final entry `shadeFunction(color, shadeFactor)` begining at a percentage
+  /// from start->end of this step denoted by [distance]. Default `distance`
+  /// is `0.6`.
+  ///
+  /// A [ColorArithmetic] function, as required, must confrom to
+  ///
+  ///     Color Function(Color color, double factor)
+  ///
+  /// Default `shadeFunction` is [Shades.withWhite] which provides [shadeFactor]
+  /// as `color.withWhite(shadeFactor)`. Method `withWhite()` is like
+  /// `withRed()` or `withBlue()` but it adds the given value to all three
+  /// [Color] components, lightening the color. See [Shading].
+  ///
+  /// See [Shades] for a few pre-defined [ColorArithmetic] functions.
+  final ColorArithmetic shadeFunction;
+  /// A `double` to provide to [shadeFunction] when "shading" each colored step.
+  ///
+  /// The default value is `-90` as this corresponds to the default
+  /// [shadeFunction] of [Shades.withWhite]. In this scenario, the color of each
+  /// step transitions from `thatColor` to `thatColor.withWhite(-90)`.
+  final double shadeFactor;
+  /// A value between `0.0 .. 1.0`, defaulting at `0.6`, that places the
+  /// "midpoint" for each color shading function in the `Steps`.
+  ///
+  /// It is a percentage between the start and end of *each* step color to begin
+  /// transitioning toward the color value with [shadeFunction] applied to it.
+  ///
+  /// Imagine this represents the color red as a dark "shaded step" with
+  /// `distance ~= 0.5` (note: each color and stop in a `FooShadedSteps` is
+  /// "quadruplicated", so this diagram accurately represents how each color
+  /// will be divided):
+  ///
+  ///     |-----------------+++++++++++++++++++++++|
+  ///     [RED]  . [RED]  . [MIDPOINT] . [DARK RED]
+  ///
+  /// Then imagine this represents the same scenario but `distance ~= 0.25`:
+  ///
+  ///     |--------++++++++++++++++++++++++++++++++++++++++++|
+  ///     [RED]  . [MIDPOINT] . [STILL BLENDING] . [DARK RED]
+  final double distance;
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<Color> get steppedColors =>
+      colors ^ Shade(function: shadeFunction, factor: shadeFactor);
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<double> get steppedStops =>
+      _quadruple(stops, colors, softness, distance);
+  /// 📋 Returns a new copy of this `LinearShadedSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  @override
+  LinearShadedSteps copyWith({
+    ColorArithmetic? shadeFunction,
+    double? shadeFactor,
+    double? distance,
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    AlignmentGeometry? begin,
+    AlignmentGeometry? end,
+    TileMode? tileMode,
+    GradientTransform? transform,
+  }) =>
+      LinearShadedSteps(
+        shadeFunction: shadeFunction ?? this.shadeFunction,
+        shadeFactor: shadeFactor ?? this.shadeFactor,
+        distance: distance ?? this.distance,
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        begin: begin ?? this.begin,
+        end: end ?? this.end,
+        tileMode: tileMode ?? this.tileMode,
+        transform: transform ?? this.transform,
+      );
+  /// Returns a new [LinearSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  LinearShadedSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) =>
+      (a == null || (a is LinearShadedSteps))
+          ? LinearShadedSteps.lerp(a as LinearShadedSteps?, this, t)
+          : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) =>
+      (b == null || (b is LinearShadedSteps))
+          ? LinearShadedSteps.lerp(this, b as LinearShadedSteps?, t)
+          : super.lerpTo(b, t);
+  /// Linearly interpolate between two [LinearSteps].
+  ///
+  /// If either `LinearSteps` is `null`, this function linearly interpolates
+  /// from a `LinearSteps` that matches the other in [begin], [end], [stops] and
+  /// [tileMode] and with the same [colors] but transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static Gradient? lerp(LinearShadedSteps? a, LinearShadedSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    // return GradientTween(begin: a, end: b).lerp(t);
+    final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    final interpolated = PrimitiveGradient.byProgressiveMerge(
+        t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+        t < 0.5 ? stretched : PrimitiveGradient.from(b),
+        // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+        t);
+    // // final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return LinearShadedSteps(
+      // shadeFactor:StepTween(begin: a.shadeFactor,end: b.shadeFactor).lerp(t),
+      shadeFactor: math.max(
+          0.0, ui.lerpDouble(a.shadeFactor, b.shadeFactor.toDouble(), t)!),
+      distance: math.max(0.0, ui.lerpDouble(a.distance, b.distance, t)!),
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      begin: AlignmentGeometry.lerp(a.begin, b.begin, t)!,
+      end: AlignmentGeometry.lerp(a.end, b.end, t)!,
+    );
+  }
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    return other is LinearShadedSteps &&
+        other.shadeFunction == shadeFunction &&
+        other.shadeFactor == shadeFactor &&
+        other.distance == distance &&
+        other.softness == softness &&
+        listEquals<Color>(other.colors, colors) &&
+        listEquals<double>(other.stops, stops) &&
+        other.tileMode == tileMode &&
+        other.begin == begin &&
+        other.end == end;
+  }
+  @override
+  String toString() => '${objectRuntimeType(this, 'LinearShadedSteps')} '
+      '(shade: $shadeFactor, distance: $distance, softness: $softness, '
+      'colors: $colors, stops: $stops, $tileMode, '
+      'begin: $begin, end: $end)';
+  // ', \nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+class RadialShadedSteps extends RadialSteps {
+  /// A standard [Steps] gradient differs from the average [Gradient] in its
+  /// progression from one color to the next. Instead of smoothly transitioning
+  /// between colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// This `RadialShadedSteps` evolves [RadialSteps] one step further by
+  /// creating the "stepping" effect across four colors/stops entries instead of
+  /// only two. This allows greater control over the inner appearance of *each*
+  /// given step; "shading" it darker or "shading" it more transparent, for
+  /// example, in accordance with [shadeFunction].
+  ///
+  /// The default `shadeFunction` is [Shades.withWhite] and the default
+  /// [shadeFactor] is `-90`. In this default scenario, each step will
+  /// transition from `color` to `color.withwhite(-90)`.
+  ///
+  /// The [distance], defaulting at `0.6` is a percentage between the start and
+  /// end of *each* step color to begin transitioning toward the color value
+  /// with [shadeFunction] applied to it.
+  ///
+  /// See [RadialSteps] for more information.
+  const RadialShadedSteps({
+    this.shadeFunction = Shades.withWhite,
+    this.shadeFactor = -90,
+    this.distance = 0.6,
+    double softness = 0.0,
+    required List<Color> colors,
+    List<double>? stops,
+    AlignmentGeometry center = Alignment.center,
+    double radius = 0.5,
+    AlignmentGeometry? focal,
+    double focalRadius = 0.0,
+    TileMode tileMode = TileMode.clamp,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          center: center,
+          radius: radius,
+          focal: focal,
+          focalRadius: focalRadius,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// For any given "step", comprised of a single color "quadruplicated" across
+  /// four stops, the `shadeFunction` will be called on the color and this
+  /// result is placed as the fourth, final stop for this color step.
+  ///
+  /// There is a standard gradient transition between `color` and the "shaded"
+  /// final entry `shadeFunction(color, shadeFactor)` begining at a percentage
+  /// from start->end of this step denoted by [distance]. Default `distance`
+  /// is `0.6`.
+  ///
+  /// A [ColorArithmetic] function, as required, must confrom to
+  ///
+  ///     Color Function(Color color, double factor)
+  ///
+  /// Default `shadeFunction` is [Shades.withWhite] which provides [shadeFactor]
+  /// as `color.withWhite(shadeFactor)`. Method `withWhite()` is like
+  /// `withRed()` or `withBlue()` but it adds the given value to all three
+  /// [Color] components, lightening the color. See [Shading].
+  ///
+  /// See [Shades] for a few pre-defined [ColorArithmetic] functions.
+  final ColorArithmetic shadeFunction;
+  /// A `double` to provide to [shadeFunction] when "shading" each colored step.
+  ///
+  /// The default value is `-90` as this corresponds to the default
+  /// [shadeFunction] of [Shades.withWhite]. In this scenario, the color of each
+  /// step transitions from `thatColor` to `thatColor.withWhite(-90)`.
+  final double shadeFactor;
+  /// A value between `0.0 .. 1.0`, defaulting at `0.6`, that places the
+  /// "midpoint" for each color shading function in the `Steps`.
+  ///
+  /// It is a percentage between the start and end of *each* step color to begin
+  /// transitioning toward the color value with [shadeFunction] applied to it.
+  ///
+  /// Imagine this represents the color red as a dark "shaded step" with
+  /// `distance ~= 0.5` (note: each color and stop in a `FooShadedSteps` is
+  /// "quadruplicated", so this diagram accurately represents how each color
+  /// will be divided):
+  ///
+  ///     |-----------------+++++++++++++++++++++++|
+  ///     [RED]  . [RED]  . [MIDPOINT] . [DARK RED]
+  ///
+  /// Then imagine this represents the same scenario but `distance ~= 0.25`:
+  ///
+  ///     |--------++++++++++++++++++++++++++++++++++++++++++|
+  ///     [RED]  . [MIDPOINT] . [STILL BLENDING] . [DARK RED]
+  final double distance;
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<Color> get steppedColors =>
+      colors ^ Shade(function: shadeFunction, factor: shadeFactor);
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<double> get steppedStops =>
+      _quadruple(stops, colors, softness, distance);
+  /// 📋 Returns a new copy of this `RadialShadedSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  @override
+  RadialShadedSteps copyWith({
+    ColorArithmetic? shadeFunction,
+    double? shadeFactor,
+    double? distance,
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? radius,
+    AlignmentGeometry? focal,
+    double? focalRadius,
+    GradientTransform? transform,
+  }) =>
+      RadialShadedSteps(
+        shadeFunction: shadeFunction ?? this.shadeFunction,
+        shadeFactor: shadeFactor ?? this.shadeFactor,
+        distance: distance ?? this.distance,
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        transform: transform ?? this.transform,
+        tileMode: tileMode ?? this.tileMode,
+        center: center ?? this.center,
+        radius: radius ?? this.radius,
+        focal: focal ?? this.focal,
+        focalRadius: focalRadius ?? this.focalRadius,
+      );
+  /// Returns a new [RadialSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  RadialShadedSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) =>
+      (a == null || (a is RadialShadedSteps))
+          ? RadialShadedSteps.lerp(a as RadialShadedSteps?, this, t)
+          : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) =>
+      (b == null || (b is RadialShadedSteps))
+          ? RadialShadedSteps.lerp(this, b as RadialShadedSteps?, t)
+          : super.lerpTo(b, t);
+  /// Linearly interpolate between two [RadialShadedSteps]s.
+  ///
+  /// If either gradient is `null`, this function linearly interpolates from a
+  /// a gradient that matches the other gradient in [center], [radius], [stops]
+  /// and [tileMode] and with the same [colors] but transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static RadialShadedSteps? lerp(
+      RadialShadedSteps? a, RadialShadedSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    final interpolated = PrimitiveGradient.byProgressiveMerge(
+        t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+        t < 0.5 ? stretched : PrimitiveGradient.from(b),
+        // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+        t);
+    // final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return RadialShadedSteps(
+      // shadeFactor:StepTween(begin: a.shadeFactor,end: b.shadeFactor).lerp(t),
+      shadeFactor: math.max(
+          0.0, ui.lerpDouble(a.shadeFactor, b.shadeFactor.toDouble(), t)!),
+      distance: math.max(0.0, ui.lerpDouble(a.distance, b.distance, t)!),
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      center: AlignmentGeometry.lerp(a.center, b.center, t)!,
+      radius: math.max(0.0, ui.lerpDouble(a.radius, b.radius, t)!),
+      focal: AlignmentGeometry.lerp(a.focal, b.focal, t),
+      focalRadius:
+          math.max(0.0, ui.lerpDouble(a.focalRadius, b.focalRadius, t)!),
+    );
+  }
+  @override
+  bool operator ==(Object other) => (identical(this, other))
+      ? true
+      : (other.runtimeType != runtimeType)
+          ? false
+          : other is RadialShadedSteps &&
+              other.shadeFunction == shadeFunction &&
+              other.shadeFactor == shadeFactor &&
+              other.distance == distance &&
+              other.softness == softness &&
+              listEquals<Color>(other.colors, colors) &&
+              listEquals<double>(other.stops, stops) &&
+              other.tileMode == tileMode &&
+              other.center == center &&
+              other.radius == radius &&
+              other.focal == focal &&
+              other.focalRadius == focalRadius;
+  @override
+  String toString() => '${objectRuntimeType(this, 'RadialShadedSteps')}'
+      '(softness: $softness, shade: $shadeFactor, distance: $distance, '
+      'colors: $colors, stops: $stops, $tileMode, '
+      'center: $center, radius: $radius, '
+      'focal: $focal, focalRadius: $focalRadius)';
+  // ', \nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+class SweepShadedSteps extends SweepSteps {
+  /// A standard [Steps] gradient differs from the average [Gradient] in its
+  /// progression from one color to the next. Instead of smoothly transitioning
+  /// between colors, `Steps` have hard edges created by duplicating colors and
+  /// stops.
+  ///
+  /// This `SweepShadedSteps` evolves [SweepSteps] one step further by creating
+  /// the "stepping" effect across four colors/stops entries instead of only
+  /// two. This allows greater control over the inner appearance of *each*
+  /// given step; "shading" it darker or "shading" it more transparent, for
+  /// example, in accordance with [shadeFunction].
+  ///
+  /// The default `shadeFunction` is [Shades.withWhite] and the default
+  /// [shadeFactor] is `-90`. In this default scenario, each step will
+  /// transition from `color` to `color.withwhite(-90)`.
+  ///
+  /// The [distance], defaulting at `0.6` is a percentage between the start and
+  /// end of *each* step color to begin transitioning toward the color value
+  /// with [shadeFunction] applied to it.
+  ///
+  /// See [SweepSteps] for more information.
+  const SweepShadedSteps({
+    this.shadeFunction = Shades.withWhite,
+    this.shadeFactor = -90,
+    this.distance = 0.6,
+    double softness = 0.0,
+    required List<Color> colors,
+    List<double>? stops,
+    TileMode tileMode = TileMode.clamp,
+    AlignmentGeometry center = Alignment.center,
+    double startAngle = 0.0,
+    double endAngle = math.pi * 2,
+    GradientTransform? transform,
+  }) : super(
+          softness: softness,
+          colors: colors,
+          stops: stops,
+          center: center,
+          startAngle: startAngle,
+          endAngle: endAngle,
+          tileMode: tileMode,
+          transform: transform,
+        );
+  /// For any given "step", comprised of a single color "quadruplicated" across
+  /// four stops, the `shadeFunction` will be called on the color and this
+  /// result is placed as the fourth, final stop for this color step.
+  ///
+  /// There is a standard gradient transition between `color` and the "shaded"
+  /// final entry `shadeFunction(color, shadeFactor)` begining at a percentage
+  /// from start->end of this step denoted by [distance]. Default `distance`
+  /// is `0.6`.
+  ///
+  /// A [ColorArithmetic] function, as required, must confrom to
+  ///
+  ///     Color Function(Color color, double factor)
+  ///
+  /// Default `shadeFunction` is [Shades.withWhite] which provides [shadeFactor]
+  /// as `color.withWhite(shadeFactor)`. Method `withWhite()` is like
+  /// `withRed()` or `withBlue()` but it adds the given value to all three
+  /// [Color] components, lightening the color. See [Shading].
+  ///
+  /// See [Shades] for a few pre-defined [ColorArithmetic] functions.
+  final ColorArithmetic shadeFunction;
+  /// A `double` to provide to [shadeFunction] when "shading" each colored step.
+  ///
+  /// The default value is `-90` as this corresponds to the default
+  /// [shadeFunction] of [Shades.withWhite]. In this scenario, the color of each
+  /// step transitions from `thatColor` to `thatColor.withWhite(-90)`.
+  final double shadeFactor;
+  /// A value between `0.0 .. 1.0`, defaulting at `0.6`, that places the
+  /// "midpoint" for each color shading function in the `Steps`.
+  ///
+  /// It is a percentage between the start and end of *each* step color to begin
+  /// transitioning toward the color value with [shadeFunction] applied to it.
+  ///
+  /// Imagine this represents the color red as a dark "shaded step" with
+  /// `distance ~= 0.5` (note: each color and stop in a `FooShadedSteps` is
+  /// "quadruplicated", so this diagram accurately represents how each color
+  /// will be divided):
+  ///
+  ///     |-----------------+++++++++++++++++++++++|
+  ///     [RED]  . [RED]  . [MIDPOINT] . [DARK RED]
+  ///
+  /// Then imagine this represents the same scenario but `distance ~= 0.25`:
+  ///
+  ///     |--------++++++++++++++++++++++++++++++++++++++++++|
+  ///     [RED]  . [MIDPOINT] . [STILL BLENDING] . [DARK RED]
+  final double distance;
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<Color> get steppedColors =>
+      colors ^ Shade(function: shadeFunction, factor: shadeFactor);
+  /// Overrides `Steps` property to "quadruplicate" with shading instead of
+  /// only duplicating.
+  @override
+  List<double> get steppedStops =>
+      _quadruple(stops, colors, softness, distance);
+  /// 📋 Returns a new copy of this `SweepShadedSteps` with any provided
+  /// optional parameters overriding those of `this`.
+  @override
+  SweepShadedSteps copyWith({
+    ColorArithmetic? shadeFunction,
+    double? shadeFactor,
+    double? distance,
+    double? softness,
+    List<Color>? colors,
+    List<double>? stops,
+    TileMode? tileMode,
+    AlignmentGeometry? center,
+    double? startAngle,
+    double? endAngle,
+    GradientTransform? transform,
+  }) =>
+      SweepShadedSteps(
+        shadeFunction: shadeFunction ?? this.shadeFunction,
+        shadeFactor: shadeFactor ?? this.shadeFactor,
+        distance: distance ?? this.distance,
+        softness: softness ?? this.softness,
+        colors: colors ?? this.colors,
+        stops: stops ?? this.stops,
+        center: center ?? this.center,
+        startAngle: startAngle ?? this.startAngle,
+        endAngle: endAngle ?? this.endAngle,
+        tileMode: tileMode ?? this.tileMode,
+        transform: transform ?? this.transform,
+      );
+  /// Returns a new [SweepSteps] with its colors scaled by the given factor.
+  /// Since the alpha channel is what receives the scale factor,
+  /// `0.0` or less results in a gradient that is fully transparent.
+  @override
+  SweepShadedSteps scale(double factor) => copyWith(
+        colors: colors
+            .map<Color>((Color color) => Color.lerp(null, color, factor)!)
+            .toList(),
+      );
+  @override
+  Gradient? lerpFrom(Gradient? a, double t) =>
+      (a == null || (a is SweepShadedSteps))
+          ? SweepShadedSteps.lerp(a as SweepShadedSteps?, this, t)
+          : super.lerpFrom(a, t);
+  @override
+  Gradient? lerpTo(Gradient? b, double t) =>
+      (b == null || (b is SweepShadedSteps))
+          ? SweepShadedSteps.lerp(this, b as SweepShadedSteps?, t)
+          : super.lerpTo(b, t);
+  /// Linearly interpolate between two [SweepShadedSteps]s.
+  ///
+  /// If either gradient is `null`, this function linearly interpolates from a
+  /// a gradient that matches the other gradient in [center], [startAngle],
+  /// [endAngle], [stops] & [tileMode] and with the same [colors] but
+  /// transparent (using [scale]).
+  ///
+  /// The `t` argument represents a position on the timeline, with `0.0` meaning
+  /// that the interpolation has not started, returning `a` (or something
+  /// equivalent to `a`); `1.0` meaning that the interpolation has finished,
+  /// returning `b` (or something equivalent to `b`); and values in between
+  /// `0.0 < t < 1.0` meaning that the interpolation is at the relevant point as
+  /// a percentage along the timeline between `a` and `b`.
+  ///
+  /// The interpolation can be extrapolated beyond `0.0` and `1.0`, so negative
+  /// values and values greater than `1.0` are valid (and can easily be
+  /// generated by curves such as [Curves.elasticInOut]).
+  ///
+  /// Values for `t` are usually obtained from an [Animation<double>], such as
+  /// an `AnimationController`.
+  static SweepShadedSteps? lerp(
+      SweepShadedSteps? a, SweepShadedSteps? b, double t) {
+    if (a == null && b == null) return null;
+    if (a == null) return b!.scale(t);
+    if (b == null) return a.scale(1.0 - t);
+    final stretched = PrimitiveGradient.fromStretchLerp(a, b, t);
+    final interpolated = PrimitiveGradient.byProgressiveMerge(
+        t < 0.5 ? PrimitiveGradient.from(a) : stretched,
+        t < 0.5 ? stretched : PrimitiveGradient.from(b),
+        // t < 0.5 ? t * 2 : (t - 0.5) * 2);
+        t);
+    // final interpolated = PrimitiveGradient.byCombination(a, b, t);
+    // final interpolated = PrimitiveGradient.fromStretchLerp(a, b, t);
+    // final interpolated = PrimitiveGradient.byProgressiveMerge(
+    // PrimitiveGradient.from(a), PrimitiveGradient.from(b), t);
+    return SweepShadedSteps(
+      // shadeFactor: StepTween(begin:a.shadeFactor, end:b.shadeFactor).lerp(t),
+      // shadeFactor:
+      shadeFactor: math.max(
+          0.0, ui.lerpDouble(a.shadeFactor, b.shadeFactor.toDouble(), t)!),
+      distance: math.max(0.0, ui.lerpDouble(a.distance, b.distance, t)!),
+      softness: math.max(0.0, ui.lerpDouble(a.softness, b.softness, t)!),
+      colors: interpolated.colors,
+      stops: interpolated.stops,
+      // TODO: Interpolate Matrix4 / GradientTransform
+      transform: t > 0.5 ? a.transform : b.transform,
+      // TODO: interpolate tile mode
+      tileMode: t < 0.5 ? a.tileMode : b.tileMode,
+      center: AlignmentGeometry.lerp(a.center, b.center, t)!,
+      startAngle: math.max(0.0, ui.lerpDouble(a.startAngle, b.startAngle, t)!),
+      endAngle: math.max(0.0, ui.lerpDouble(a.endAngle, b.endAngle, t)!),
+    );
+  }
+  @override
+  bool operator ==(Object other) => (identical(this, other))
+      ? true
+      : (other.runtimeType != runtimeType)
+          ? false
+          : other is SweepShadedSteps &&
+              other.shadeFunction == shadeFunction &&
+              other.shadeFactor == shadeFactor &&
+              other.distance == distance &&
+              other.softness == softness &&
+              listEquals<Color>(other.colors, colors) &&
+              listEquals<double>(other.stops, stops) &&
+              other.center == center &&
+              other.startAngle == startAngle &&
+              other.endAngle == endAngle &&
+              other.tileMode == tileMode;
+  @override
+  String toString() => '${objectRuntimeType(this, 'SweepShadedSteps')}'
+      '(softness: $softness, shade: $shadeFactor, distance: $distance, '
+      'colors: $colors, stops: $stops, $tileMode, center: $center, '
+      'startAngle: $startAngle, endAngle: $endAngle)';
+  // ', \nresolved colors: $steppedColors, resolved stops: $steppedStops';
+}
+// File: lib/src/gradients/steps/operators.dart
+library gradients;
+import 'package:flutter/widgets.dart';
+import '../models.dart';
+class Shade {
+  /// Defines the [function] and [factor] for step shading.
+  const Shade({required this.function, required this.factor});
+  /// A `ColorArithmetic` is a function that returns a [Color] after accepting
+  /// and considering a `Color` and an `int` [factor].
+  ///
+  /// Consider `ColorArithmetic` function [Shades.withWhite], a positive value
+  /// lightens the color and negative values darken it.
+  final ColorArithmetic function;
+  /// The `factor` to provide to [function].
+  final double factor;
+}
+class ShadeStep {
+  /// Defines the [distance] and [softness] for step shading.
+  const ShadeStep(double distance, double softness)
+      : _distance = distance,
+        _softness = softness;
+  final double _distance;
+  /// The percentage between the current stop and the next stop
+  /// (ranging `0.0 .. 1.0`) to begin shading.
+  double get distance => _distance.clamp(0.0, 1.0);
+  final double _softness;
+  /// Softens/blurs the hard edges between steps, making it appear more like
+  /// its original `Gradient` counterpart.
+  double get softness => _softness.clamp(0.0, 1.0);
+}
+extension CopyColors on List<Color> {
+  /// ### Duplication Operator
+  /// Takes a `List<Color>` and returns a list with duplicated entries.
+  List<Color> operator ~() =>
+      fold([], (List<Color> list, Color entry) => list..addAll([entry, entry]));
+  /// ### Shaded Quadruplication Operator
+  /// Takes a `List<double>` and returns a list with duplicated entries where
+  /// every duplicated entry may optionally have an [shade] added to it.
+  // List<Color> operator ^(int shade) => fold(
+  List<Color> operator ^(Shade shade) => fold(
+        [],
+        (List<Color> list, Color entry) => list
+          ..addAll(
+            [
+              entry,
+              // entry.withWhite(shade ~/ 2),
+              shade.function(entry, shade.factor / 3),
+              // entry.withWhite(shade ~/ 3),
+              shade.function(entry, shade.factor.toDouble()),
+              // entry.withWhite(shade),
+              shade.function(entry, (shade.factor * 1.4)),
+              // entry.withWhite((shade * 1.4).truncate()),
+            ],
+          ),
+      );
+}
+extension CopyStops on List<double> {
+  /// ### "Softening" Duplication Operator
+  /// Takes a `List<double>` and returns a list with duplicated entries where
+  /// every duplicated entry may optionally have an [softness] added to it.
+  ///
+  /// If `additive` is `0.0`, then this operator functions like
+  /// [CopyColors].
+  List<double> operator ^(double softness) => fold(
+        [],
+        (List<double> list, double entry) => list
+          ..addAll(
+            [entry, entry + softness],
+          ),
+      );
+  /// ### "Softening" Quadruplication Operator
+  /// Takes a `List<double>` and returns a list with quadrupled entries
+  /// with special calculations made.
+  List<double> operator %(ShadeStep step) {
+    final sets = <List<double>>[];
+    for (var i = 0; i < length; i++) {
+      final current = this[i] == 1.0 ? this[i] - step.softness * 3 : this[i];
+      final next = (i == length - 1) ? 1.0 : this[i + 1];
+      sets.add([
+        current,
+        current + (next - current) * step.distance,
+        // next - 0.002,
+        // next - 0.001,
+        next - step.softness,
+        next - step.softness,
+        // next,
+      ]);
+    }
+    return sets.reduce((value, element) => value + element);
+  }
+}
+// File: lib/src/gradients/common.dart
+library gradients;
+import 'package:flutter/widgets.dart';
+import 'interpolation.dart';
+import 'models.dart';
+import 'steps/steps.dart';
+import 'tween.dart';
+import 'utils.dart';
+List<double> stopsOrImplied(List<double>? stops, int colorCount) {
+  if (stops != null) return stops;
+  final separation = 1.0 / (colorCount - 1);
+  return List<double>.generate(
+    colorCount,
+    (int index) => index * separation,
+    growable: false,
+  );
+}
+List<double> interpretStops(Gradient gradient) {
+  final stops = List<double>.from(stopsOrImplied(
+    (gradient is IntermediateGradient)
+        ? gradient.primitive.stops
+        : gradient.stops,
+    (gradient is IntermediateGradient)
+        ? gradient.primitive.colors.length
+        : (gradient is Steps)
+            ? gradient.colors.length + 1
+            : gradient.colors.length,
+  ));
+  if (gradient is Steps && gradient.stops == null) stops.removeLast();
+  return stops;
+}
+Gradient spectrumCopyWith(
+  Gradient original, {
+  // Universal
+  List<Color>? colors,
+  List<double>? stops,
+  GradientTransform? transform,
+  TileMode? tileMode,
+  // Linear
+  AlignmentGeometry? begin,
+  AlignmentGeometry? end,
+  // Radial or Sweep
+  AlignmentGeometry? center,
+  // Radial
+  double? radius,
+  AlignmentGeometry? focal,
+  double? focalRadius,
+  // Sweep
+  double? startAngle,
+  double? endAngle,
+  // Steps
+  double? softness,
+  // Shaded Steps
+  ColorArithmetic? shadeFunction,
+  double? shadeFactor,
+  double? distance,
+}) =>
+    original.copyWith(
+      colors: colors,
+      stops: stops,
+      transform: transform,
+      tileMode: tileMode,
+      begin: begin,
+      end: end,
+      center: center,
+      radius: radius,
+      focal: focal,
+      focalRadius: focalRadius,
+      startAngle: startAngle,
+      endAngle: endAngle,
+      softness: softness,
+      shadeFunction: shadeFunction,
+      shadeFactor: shadeFactor,
+      distance: distance,
+    );
+// File: lib/src/gradients/animation.dart
+library gradients;
+import 'package:flutter/widgets.dart';
+import 'common.dart';
+import 'models.dart';
+import 'utils.dart';
+enum GradientAnimation {
+  /// `GradientAnimation.colorArithmetic` implies a [ColorArithmetic]
+  /// will be mapped.
+  colorArithmetic,
+  /// `GradientAnimation.stopsArithmetic` implies a [StopsArithmetic]
+  /// will be mapped.
+  stopsArithmetic,
+  // `GradientAnimation.tweenSpec` implies a [TweenSpec] will be mapped.
+  /// `GradientAnimation.tweenSpec` implies a
+  /// `Map<GradientProperty, Tween<dynamic>>` will be mapped.
+  tweenSpec,
+  /// `GradientAnimation.none` implies no animation should occur.
+  ///
+  /// Mapping this value to any other value (such as
+  /// `{GradientAnimation.none: null}`) within an [AnimatedGradient.storyboard]
+  /// will disable all animation transformations.
+  none,
+}
+class AnimatedGradient extends AnimatedWidget {
+  /// Use this object's [observe] property, after providing some [controller],
+  /// to drive a customizable animation on the [gradientInput] by tweaking
+  /// the [storyboard] map of [GradientAnimation]s.
+  ///
+  /// Provide, for example, an [AnimationController] as `controller` to push the
+  /// flow of the animation. Consider driving the controller by
+  /// `controller.repeat(reverse:true)`.
+  ///
+  /// Not intended to have [build] called like a true `Widget`. \
+  /// Instead opt to [observe] the [Gradient]-type output.
+  /// - If this `Widget` is treed out and built, however, the return is a
+  ///   [DecoratedBox] whose gradient is set to [observe].
+  ///
+  /// ## Animated Gradient Storyboard `Map`
+  /// A "Gradient Storyboard" value provided as [storyboard] maps
+  /// [GradientAnimation]s to relevant values to apply those animation
+  /// transformations.
+  ///
+  /// Beyond [ColorArithmetic] & [StopsArithmetic] animation transformations,
+  // [GradientAnimation.tweenSpec] may be mapped to a [TweenSpec] to detail
+  /// [GradientAnimation.tweenSpec] may be mapped to a "TweenSpec" to detail
+  /// individual [Tween]s for each of the many potential [Gradient] sub-type
+  /// properties (such as [LinearGradient.begin] or [RadialGradient.radius]).
+  ///
+  /// This "TweenSpec" is a `Map<GradientProperty, Tween<dynamic>>`.
+  ///
+  /// ## `GradientAnimation` Mappings
+  /// If `GradientAnimation.colorArithmetic` is mapped to a [ColorArithmetic],
+  /// then that function applies [Gradient.colors] animation transformations. \
+  /// See [Shades] for more ideas.
+  ///
+  /// If `GradientAnimation.stopsArithmetic` is mapped to a [StopsArithmetic],
+  /// then that function applies [Gradient.stops] animation transformations. \
+  /// See [Maths] for more ideas.
+  ///
+  // If `GradientAnimation.tweenSpec` is mapped to a [TweenSpec], then *that*
+  /// If `GradientAnimation.tweenSpec` is mapped to a "TweenSpec", then *that*
+  /// object allows the mapping of [Tween]s to any potential [GradientProperty].
+  ///
+  /// ## Custom `copyWith()` Function
+  /// In order to utilize custom, bespoke [Gradient] types that would not be
+  /// hard-code recognized by this package and its default `copyWith()` method,
+  /// provide a [GradientCopyWith] override for [_copyWith].
+  const AnimatedGradient({
+    Key? key,
+    required Animation<double> controller,
+    required Gradient gradient,
+    this.storyboard = const {},
+    GradientCopyWith overrideCopyWith = spectrumCopyWith,
+  })  : _copyWith = overrideCopyWith,
+        _gradient = gradient,
+        super(key: key, listenable: controller);
+  /// The provided `Animation<double>` from construction, accessed as
+  /// `super.listenable`.
+  Animation<double> get animation => listenable as Animation<double>;
+  /// The `Gradient` provided at construction.
+  // Such that an inquiring developer could look through the available
+  // properties of an `AnimatedGradient` and not see an ambiguous "gradient"
+  // field.
+  ///
+  /// To obtain the actual animated output of this `AnimatedGradient`,
+  /// invoke [observe].
+  Gradient get gradientInput => _gradient;
+  /// The `Gradient` provided at construction.
+  final Gradient _gradient;
+  /// Mappings from [GradientAnimation]s -> `dynamic`, where `dynamic` matches
+  /// with the key:
+  /// - `GradientAnimation.colorArithmetic:` [ColorArithmetic]
+  /// - `GradientAnimation.stopsArithmetic:` [StopsArithmetic]
+  // - `GradientAnimation.tweenSpec: TweenSpec`
+  //   - Where [TweenSpec] is a mapping from [GradientProperty]s -> [Tween]s
+  /// - `GradientAnimation.tweenSpec: Map<GradientProperty, Tween<dynamic>>`
+  final Map<GradientAnimation, dynamic> storyboard;
+  // final GradientStoryboard storyboard;
+  /// Override this package's default `Gradient.copyWith()` method:
+  /// [spectrumCopyWith], a wrapper for [GradientUtils] extension
+  /// `Gradient.copyWith()`.
+  ///
+  /// ---
+  /// {@macro GradientCopyWith}
+  final GradientCopyWith _copyWith;
+  /// Observe the output `Gradient` which applies modifications to the
+  /// [gradientInput] based on the [animation] and other provided properties,
+  /// considering [storyboard] and the relevant mappings from \
+  /// [GradientAnimation]s -> `dynamic`, where `dynamic` matches with the key:
+  /// - `GradientAnimation.colorArithmetic:` [ColorArithmetic]
+  /// - `GradientAnimation.stopsArithmetic:` [StopsArithmetic]
+  // - `GradientAnimation.tweenSpec: TweenSpec`
+  //   - Where [TweenSpec] is a mapping from [GradientProperty]s -> [Tween]s
+  /// - `GradientAnimation.tweenSpec: Map<GradientProperty, Tween<dynamic>>`
+  Gradient get observe {
+    if (storyboard.isEmpty || storyboard.containsKey(GradientAnimation.none)) {
+      return _gradient;
+    }
+    var observation = _gradient;
+    _makeAssertations();
+    if (storyboard.containsKey(GradientAnimation.colorArithmetic)) {
+      observation = _copyWith(observation,
+          colors: _gradient.colors
+              .map<Color>(
+                (c) => (storyboard[GradientAnimation.colorArithmetic]
+                        as ColorArithmetic)
+                    .call(c, animation.value),
+              )
+              .toList());
+    }
+    if (storyboard.containsKey(GradientAnimation.stopsArithmetic)) {
+      observation = _copyWith(observation,
+          stops: interpretStops(_gradient)
+              .map<double>(
+                (s) => (storyboard[GradientAnimation.stopsArithmetic]
+                        as StopsArithmetic)
+                    .call(s, animation.value),
+              )
+              .toList());
+    }
+    if (!storyboard.containsKey(GradientAnimation.tweenSpec)) {
+      return observation;
+    }
+    // final spec = storyboard[GradientAnimation.tweenSpec] as TweenSpec;
+    final spec = storyboard[GradientAnimation.tweenSpec]
+        as Map<GradientProperty, Tween<dynamic>>;
+    return _copyWith(
+      observation,
+      begin: spec.containsKey(GradientProperty.begin)
+          ? spec[GradientProperty.begin]!.evaluate(animation)
+          : observation.begin,
+      end: spec.containsKey(GradientProperty.end)
+          ? spec[GradientProperty.end]!.evaluate(animation)
+          : observation.end,
+      center: spec.containsKey(GradientProperty.center)
+          ? spec[GradientProperty.center]!.evaluate(animation)
+          : observation.center,
+      radius: spec.containsKey(GradientProperty.radius)
+          ? spec[GradientProperty.radius]!.evaluate(animation)
+          : observation.radius,
+      focal: spec.containsKey(GradientProperty.focal)
+          ? spec[GradientProperty.focal]!.evaluate(animation)
+          : observation.focal,
+      focalRadius: spec.containsKey(GradientProperty.focalRadius)
+          ? spec[GradientProperty.focalRadius]!.evaluate(animation)
+          : observation.focalRadius,
+      startAngle: spec.containsKey(GradientProperty.startAngle)
+          ? spec[GradientProperty.startAngle]!.evaluate(animation)
+          : observation.startAngle,
+      endAngle: spec.containsKey(GradientProperty.endAngle)
+          ? spec[GradientProperty.endAngle]!.evaluate(animation)
+          : observation.endAngle,
+      softness: spec.containsKey(GradientProperty.softness)
+          ? spec[GradientProperty.softness]!.evaluate(animation)
+          : observation.softness,
+      shadeFactor: spec.containsKey(GradientProperty.shadeFactor)
+          ? spec[GradientProperty.shadeFactor]!.evaluate(animation)
+          : observation.shadeFactor,
+      distance: spec.containsKey(GradientProperty.distance)
+          ? spec[GradientProperty.distance]!.evaluate(animation)
+          : observation.distance,
+    );
+  }
+  /// An [AnimatedGradient] is not intended to be built directly like a
+  /// true `Widget`. Instead opt to [observe] for the direct [Gradient]-
+  /// type output.
+  ///
+  /// This `build()` method will return a [DecoratedBox]
+  /// whose gradient is set to [observe].
+  @override
+  Widget build(BuildContext context) {
+    // assert(
+    //   false,
+    //   'An [AnimatedGradient] is not intended to be built directly '
+    //   'like a true Widget. \nInstead opt to [AnimatedGradient.observe] '
+    //   'for the direct [Gradient]-type output.',
+    // );
+    return DecoratedBox(decoration: BoxDecoration(gradient: observe));
+  }
+  void _makeAssertations() {
+    assert(
+        storyboard.containsKey(GradientAnimation.colorArithmetic)
+            ? storyboard[GradientAnimation.colorArithmetic]! is ColorArithmetic
+            : true,
+        'If [GradientAnimation.colorArithmetic] is employed, '
+        'ensure the function value is a [ColorArithmetic].');
+    assert(
+        storyboard.containsKey(GradientAnimation.stopsArithmetic)
+            ? storyboard[GradientAnimation.stopsArithmetic]! is StopsArithmetic
+            : true,
+        'If [GradientAnimation.stopsArithmetic] is employed, '
+        'ensure the function value is a [StopsArithmetic].');
+    assert(
+        storyboard.containsKey(GradientAnimation.tweenSpec)
+            // ? storyboard[GradientAnimation.tweenSpec]! is TweenSpec
+            ? storyboard[GradientAnimation.tweenSpec]!
+                is Map<GradientProperty, Tween<dynamic>>
+            : true,
+        'If [GradientAnimation.tweenSpec] is employed, '
+        'ensure the map value is a [TweenSpec].');
+    if (storyboard.containsKey(GradientAnimation.tweenSpec)) {
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.begin)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.begin]!
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.begin]! is Tween<AlignmentGeometry?>
+              : true,
+          'If [GradientProperty.begin] is employed, '
+          'ensure the [tween] is a [Tween<AlignmentGeometry?>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.end)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.end]!
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.end]! is Tween<AlignmentGeometry?>
+              : true,
+          'If [GradientProperty.end] is employed, '
+          'ensure the [tween] is a [Tween<AlignmentGeometry?>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.center)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.center]!
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.center]! is Tween<AlignmentGeometry?>
+              : true,
+          'If [GradientProperty.center] is employed, '
+          'ensure the [tween] is a [Tween<AlignmentGeometry?>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.radius)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                  // as TweenSpec)[GradientProperty.radius]! is Tween<double>
+                  as Map<GradientProperty,
+                      Tween<dynamic>>)[GradientProperty.radius]! is Tween<
+                  double>
+              : true,
+          'If [GradientProperty.radius] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.focal)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.focal]!
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.focal]! is Tween<AlignmentGeometry?>
+              : true,
+          'If [GradientProperty.focal] is employed, '
+          'ensure the [tween] is a [Tween<AlignmentGeometry?>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.focalRadius)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.focalRadius]!
+                      //is Tween<double>
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.focalRadius]! is Tween<double>
+              : true,
+          'If [GradientProperty.focalRadius] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.startAngle)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                      // as TweenSpec)[GradientProperty.startAngle]!
+                      //is Tween<double>
+                      as Map<GradientProperty, Tween<dynamic>>)[
+                  GradientProperty.startAngle]! is Tween<double>
+              : true,
+          'If [GradientProperty.startAngle] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.endAngle)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                  // as TweenSpec)[GradientProperty.endAngle]! is Tween<double>
+                  as Map<GradientProperty,
+                      Tween<dynamic>>)[GradientProperty.endAngle]! is Tween<
+                  double>
+              : true,
+          'If [GradientProperty.endAngle] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.softness)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                  // as TweenSpec)[GradientProperty.softness]! is Tween<double>
+                  as Map<GradientProperty,
+                      Tween<dynamic>>)[GradientProperty.softness]! is Tween<
+                  double>
+              : true,
+          'If [GradientProperty.softness] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.shadeFactor)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                  // as TweenSpec)[GradientProperty.shadeFactor]! is Tween<num>
+                  as Map<GradientProperty,
+                      Tween<dynamic>>)[GradientProperty.shadeFactor]! is Tween<
+                  double>
+              : true,
+          'If [GradientProperty.shadeFactor] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+      assert(
+          // (storyboard[GradientAnimation.tweenSpec] as TweenSpec)
+          (storyboard[GradientAnimation.tweenSpec]
+                      as Map<GradientProperty, Tween<dynamic>>)
+                  .containsKey(GradientProperty.distance)
+              ? (storyboard[GradientAnimation.tweenSpec]
+                  // as TweenSpec)[GradientProperty.distance]! is Tween<double>
+                  as Map<GradientProperty,
+                      Tween<dynamic>>)[GradientProperty.distance]! is Tween<
+                  double>
+              : true,
+          'If [GradientProperty.distance] is employed, '
+          'ensure the [tween] is a [Tween<double>].');
+    }
+  }
+}
+// File: lib/src/gradients/models.dart
+library gradients;
+import 'package:flutter/widgets.dart';
+import '../colors/common.dart' show ComponentRestriction;
+import '../colors/shading.dart';
+import 'steps/steps.dart';
+enum GradientProperty {
+  /// Potential [LinearGradient] property.
+  begin,
+  /// Potential [LinearGradient] property.
+  end,
+  /// Potential [RadialGradient] or [SweepGradient] property.
+  center,
+  /// Potential [RadialGradient] property.
+  radius,
+  /// Potential [RadialGradient] property.
+  focal,
+  /// Potential [RadialGradient] property.
+  focalRadius,
+  /// Potential [SweepGradient] property.
+  startAngle,
+  /// Potential [SweepGradient] property.
+  endAngle,
+  /// Potential [Steps] or `FooShadedSteps` property.
+  softness,
+  /// Potential `FooShadedSteps` property.
+  shadeFactor,
+  /// Potential `FooShadedSteps` property.
+  distance,
+}
+typedef ColorArithmetic = Color Function(Color color, double factor);
+abstract class Shades {
+  /// Perform no shading and simply return the provided [color].
+  static Color none(Color color, double factor) => color;
+  /// Default [ColorArithmetic] function for `FooShadedSteps`.
+  ///
+  /// A positive factor lightens the color, a negative factor darkens it.
+  /// Clamped to appropriate range. Factor is `round()`ed to an `int`.
+  static Color withWhite(Color color, double factor) =>
+      color.withWhite(factor.restricted);
+  /// A positive factor darkens the color, while a negative factor lightens it.
+  /// Clamped to appropriate range. Factor is `round()`ed to an `int`.
+  static Color withBlack(Color color, double factor) =>
+      color.withBlack(factor.restricted);
+  /// A factor between `0..254` represents a transparent color, while a
+  /// factor of `255` will return the color entirely opaque. Factor is
+  /// rounded to an `int`.
+  static Color withAlpha(Color color, double factor) =>
+      color.withAlpha(factor.restricted);
+}
+typedef StopsArithmetic = double Function(double stop, double factor);
+abstract class Maths {
+  /// Perform no maths and simply return the provided stop [s].
+  static double none(double s, double f) => s;
+  /// Add the provided animation value [f] to the provided stop [s],
+  /// claming between `0..1`.
+  static double addition(double s, double f) => (s + f).clamp(0, 1);
+  /// Subtract the provided animation value [f] from the provided stop [s],
+  /// claming between `0..1`.
+  static double subtraction(double s, double f) => (s - f).clamp(0, 1);
+  /// Multiply the provided stop [s] by the provided animation factor [f],
+  /// claming between `0..1`.
+  static double multiplication(double s, double f) => (s * f).clamp(0, 1);
+  /// Divide the provided stop [s] by the provided animation factor [f],
+  /// claming between `0..1`.
+  static double division(double s, double f) => (s / f).clamp(0, 1);
+}

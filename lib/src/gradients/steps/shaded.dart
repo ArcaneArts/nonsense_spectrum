@@ -8,11 +8,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
+import 'package:flutter/widgets.dart';
 
+import '../../../gradients.dart';
 import '../common.dart';
-import '../models.dart';
 import 'operators.dart';
-import 'steps.dart';
+
+
 
 /// Return a list of stops that is four times the size of the original,
 /// including potential maths performed on intermediate colors considering

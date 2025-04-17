@@ -13,6 +13,8 @@
 ///   gradient and the method parameters.
 library gradients;
 
+import 'package:flutter/widgets.dart';
+
 import 'animation.dart';
 import 'common.dart';
 import 'interpolation.dart';
@@ -20,6 +22,8 @@ import 'models.dart';
 import 'steps/shaded.dart';
 import 'steps/steps.dart';
 import 'tween.dart';
+
+import 'utils.dart';
 
 /// {@template GradientCopyWith}
 /// Provision of a function type defintion for the purpose of allowing

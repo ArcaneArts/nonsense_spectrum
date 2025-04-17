@@ -5,8 +5,12 @@ library gradients;
 
 import 'dart:math' as math;
 
+import 'package:flutter/widgets.dart';
+
 import 'common.dart';
+import 'interpolation.dart';
 import 'steps/steps.dart';
+import 'utils.dart';
 
 /// An interpolation between two `Gradient`s.
 ///

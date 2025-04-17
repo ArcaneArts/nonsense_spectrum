@@ -7,7 +7,12 @@
 /// [MaterialColorToList] and [MaterialAccentToList].
 library colors;
 
+import 'package:flutter/material.dart' show MaterialAccentColor, MaterialColor;
+import 'package:flutter/widgets.dart';
+import 'package:nonsense_spectrum/colors.dart';
+
 import 'common.dart';
+import 'material.dart';
 
 /// Describes the methods that may be employed to derive a range of [Color]s.
 enum SwatchMode {

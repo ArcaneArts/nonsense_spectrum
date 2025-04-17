@@ -3,6 +3,10 @@
 /// property by consider [SwatchMode] styles.
 library colors;
 
+import 'package:flutter/material.dart' show Colors, MaterialAccentColor, MaterialColor;
+import 'package:flutter/widgets.dart';
+import 'package:nonsense_spectrum/colors.dart';
+
 import 'common.dart';
 
 ///     const kShadeCountMaterialAccent = 5;

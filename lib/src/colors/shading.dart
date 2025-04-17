@@ -2,7 +2,10 @@
 /// offering `withWhite()` and `withBlack()`.
 library colors;
 
+import 'package:flutter/widgets.dart';
+
 import 'common.dart';
+
 
 /// ---
 /// 🔦 `WithShading` extends `Color`

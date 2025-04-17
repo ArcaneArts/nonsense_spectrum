@@ -1,9 +1,11 @@
 /// Provide relevantly typed "Nill" `Gradient`s for smooth tweens to emptiness.
 library gradients;
 
-import 'common.dart';
+import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/widgets.dart';
 
 import 'steps/steps.dart';
+import 'utils.dart';
 
 /// A wrapper for retrieving transparent, empty `Gradient`s appropriate for
 /// smooth `GradientTween`s.

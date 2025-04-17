@@ -3,14 +3,8 @@
 /// - [alphaFromStrength]
 library colors;
 
-import 'package:flutter/material.dart' show Color;
+import 'package:flutter/widgets.dart';
 
-export 'package:flutter/material.dart';
-
-export 'material.dart';
-export 'operators.dart';
-export 'shading.dart';
-export 'spectrum.dart';
 
 ///     int get restricted => clamp(0,255).truncate();
 extension ComponentRestriction on num {

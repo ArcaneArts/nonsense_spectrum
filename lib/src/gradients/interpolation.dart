@@ -14,11 +14,15 @@ import 'dart:collection' as collection;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/widgets.dart';
+
 import 'common.dart';
 import 'models.dart';
 import 'steps/shaded.dart';
 import 'steps/steps.dart';
 import 'tween.dart';
+import 'utils.dart';
 
 /// Incorporate a `List<double>` [b] into list [a] over a period of time ranging
 /// from [t] == `0.0 .. 1.0`.

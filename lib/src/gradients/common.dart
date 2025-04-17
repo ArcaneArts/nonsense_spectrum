@@ -1,20 +1,13 @@
 /// Common exports & methods
 library gradients;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'interpolation.dart';
 import 'models.dart';
 import 'steps/steps.dart';
 import 'tween.dart';
 import 'utils.dart';
-
-export 'package:flutter/material.dart';
-
-export '../colors/common.dart' show ComponentRestriction;
-export '../colors/shading.dart';
-export 'interpolation.dart';
-export 'utils.dart';
 
 /// Receiving a potentially `null` list of [stops] and a concrete [colorCount]:
 /// - immediately return [stops] if non-`null`
